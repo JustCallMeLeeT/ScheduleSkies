@@ -19,8 +19,11 @@ export default function Home() {
       </Head>
       <main className="dashboard">
         <Sidebar />
+        
+        <div className='home-header'>
+        <WeatherOverview />
+        </div>
         <div className="dashboard-content">
-          <WeatherOverview />
           <section className="row">
             <div className="col">
               <ForecastCards hours={[
