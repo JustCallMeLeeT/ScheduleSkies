@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../styles/event.module.css';
+import Sidebar from '@/components/Sidebar'
 
 const MyEvents = () => {
   // 1. DATA STATE
@@ -54,7 +55,6 @@ const MyEvents = () => {
       typeColor: "#5EE093" 
     }
   ]);
-
   // 2. UI & LOCATION STATE
   const [activeFilter, setActiveFilter] = useState('All Events');
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,6 +95,7 @@ const MyEvents = () => {
 
   return (
     <div className={styles.appContainer}>
+       <Sidebar />
       <main className={styles.mainContent}>
         {/* Sky Decorations */}
         <div className={styles.sun}></div>
