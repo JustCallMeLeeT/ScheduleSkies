@@ -16,7 +16,6 @@
   margin-left: 80px; /* sidebar width */
   flex: 2;
   height: 250px;
-  width: 100vw;
   background-image: url("/images/home-header.png");
   background-size: cover;
   background-position: center;
@@ -35,4 +34,10 @@
 
 .col.wide {
   flex: 2;
+}
+
+@media (max-width: 1024px) {
+  .row {
+    flex-direction: column;
+  }
 }
