@@ -9,6 +9,7 @@ import UpcomingPlans from '@/components/UpcomingPlans'
 import SuggestedPlaces from '@/components/SuggestedPlaces'
 
 export default function Home() {
+  
   return (
     <>
       <Head>
@@ -30,7 +31,8 @@ export default function Home() {
                 {time:'8 AM',icon:'sun',temp:28},
                 {time:'12 PM',icon:'sun',temp:38},
                 {time:'4 PM',icon:'cloud',temp:30},
-                {time:'8 PM',icon:'sun',temp:28}
+                {time:'8 PM',icon:'sun',temp:28},
+                
               ]} />
             </div>
             <div className="col">

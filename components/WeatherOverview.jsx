@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import styles from '../styles/weather.module.css'
+import { getLocationWithFallback } from "@/lib/getLocation";
 
 export default function WeatherOverview({ username = 'User', weather = {} }) {
   const date = new Date()
@@ -9,8 +10,10 @@ export default function WeatherOverview({ username = 'User', weather = {} }) {
   const [weatherData, setWeatherData] = useState(false);
 
   const getWeatherData = async ()=>{
+    const { lat, lon } = await getLocationWithFallback();
+
     try{
-      const url = `https://api.openweathermap.org/data/2.5/weather?q=Cebu,608&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`;
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`;
       const response = await fetch(url);
       const data = await response.json();
       console.log(data);
@@ -27,6 +30,7 @@ export default function WeatherOverview({ username = 'User', weather = {} }) {
       console.error("Weather fetch failed:", error);
     }
   }
+
   
   useEffect(()=>{
     getWeatherData();
