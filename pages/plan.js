@@ -1,79 +1,55 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import { supabase } from '../lib/supabaseClient';
+import { getLocationWithFallback } from "@/lib/getLocation";
 import styles from '../styles/event.module.css';
 import Sidebar from '@/components/Sidebar'; 
 
 const MyEvents = () => {
   // --- 1. DATA STATE ---
-  const [eventData, setEventData] = useState([
-    {
-      id: 1,
-      title: "Breakfast-Zubuchon Bistro",
-      location: "Parian, Cebu City",
-      price: "₱350/Person",
-      date: "2026-03-07",
-      category: "Food",
+  const [eventData, setEventData] = useState([]);
+  const [userId, setUserId] = useState(null);
+  const router = useRouter();
+
+  const generateDynamicProps = (event) => {
+    let styleClass = styles.foodGreen;
+    let typeColor = '#5EE093'; 
+    if (event.category === 'SightSeeing') { styleClass = styles.sightseeing; typeColor = '#6D7DB9'; }
+    if (event.category === 'Hotel') { styleClass = styles.hotel; typeColor = '#4A9FBB'; }
+    if (event.category === 'Leisure') { styleClass = styles.leisure; typeColor = '#21B694'; }
+
+    return {
+      ...event,
+      typeColor,
       tags: [
-        { label: "Food", styleClass: styles.foodGreen },
-        { label: "Completed", styleClass: styles.completed },
-        { label: "24°C • Cloudy", styleClass: styles.weatherBlue }
-      ],
-      typeColor: "#5EE093" 
-    },
-    {
-      id: 2,
-      title: "Lunch-Azani Restaurant",
-      location: "Maria Luisa, Estate Park",
-      price: "₱600/Person",
-      date: "2026-03-07",
-      category: "Food",
-      tags: [
-        { label: "Food", styleClass: styles.foodTan },
-        { label: "Now", styleClass: styles.now },
-        { label: "28°C • Partly Cloudy", styleClass: styles.weatherTan }
-      ],
-      typeColor: "#C57241" 
-    },
-    {
-      id: 3,
-      title: "Tops Lookout-Sunset View",
-      location: "Busay, Cebu City",
-      price: "₱350/Person",
-      date: "2026-03-08",
-      category: "SightSeeing",
-      tags: [
-        { label: "SightSeeing", styleClass: styles.sightseeing },
-        { label: "Conflict", styleClass: styles.conflict }
-      ],
-      aiSuggestion: "AI Suggestion: Adjust to 3:30 PM to clear 28-min travel time",
-      typeColor: "#FF0000" 
-    },
-    {
-      id: 4,
-      title: "Check-in — Radisson Hotel",
-      location: "Serging Osmeña Blvd.",
-      price: "₱4200/Night",
-      date: "2026-03-09",
-      category: "Hotel",
-      tags: [
-        { label: "Hotel", styleClass: styles.hotel },
-        { label: "Leisure", styleClass: styles.leisure },
-        { label: "30°C • Clear", styleClass: styles.weatherTeal }
-      ],
-      typeColor: "#5EE093" 
+        { label: event.category, styleClass: styleClass }
+      ]
+    };
+  };
+
+  const fetchEvents = async () => {
+    // RLS handles user isolation automatically if set up in Supabase
+    const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true });
+    if (data && !error) {
+      setEventData(data.map(generateDynamicProps));
     }
-  ]);
+  };
 
   // --- 2. UI & LOCATION STATE ---
   const [activeFilter, setActiveFilter] = useState('All Events');
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState('Locating...');
   const [currentDate, setCurrentDate] = useState('');
+  const [temperature, setTemperature] = useState('--');
   
   // Modal & Form States
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+  const [calendarDate, setCalendarDate] = useState(new Date());
   const [isEditListMode, setIsEditListMode] = useState(false); 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [locationResults, setLocationResults] = useState([]);
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
   
   const initialFormState = { title: '', location: '', price: '', date: '', category: 'Food' };
   const [formData, setFormData] = useState(initialFormState);
@@ -81,40 +57,45 @@ const MyEvents = () => {
   const categories = ['All Events', 'Food', 'SightSeeing', 'Hotel', 'Leisure'];
   const formCategories = ['Food', 'SightSeeing', 'Hotel', 'Leisure']; 
 
-  // --- 3. FETCH LOCATION & DATE ---
+  // --- 3. FETCH LOCATION & DATE & AUTH ---
   useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+      } else {
+        setUserId(session.user.id);
+        fetchEvents();
+      }
+    };
+    checkUser();
+
     const options = { month: 'long', day: 'numeric', year: 'numeric' };
     setCurrentDate(new Date().toLocaleDateString('en-US', options));
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          setUserLocation(data.address.city || data.address.town || "Unknown Location");
-        } catch (error) {
-          setUserLocation("Cebu City"); 
+    const fetchWeather = async () => {
+      const { lat, lon } = await getLocationWithFallback();
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_API_KEY}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data && data.main) {
+          setTemperature(Math.floor(data.main.temp));
+          setUserLocation(data.name || "Cebu City");
         }
-      });
-    }
+      } catch (err) {
+        console.error("Weather fetch failed:", err);
+      }
+    };
+    fetchWeather();
   }, []);
 
   // --- 4. FORM & EVENT LOGIC ---
-  const getCategoryTheme = (category) => {
-    switch(category) {
-      case 'SightSeeing': return { color: '#6D7DB9', styleClass: styles.sightseeing };
-      case 'Hotel': return { color: '#4A9FBB', styleClass: styles.hotel };
-      case 'Leisure': return { color: '#21B694', styleClass: styles.leisure };
-      case 'Food': 
-      default: return { color: '#5EE093', styleClass: styles.foodGreen };
-    }
-  };
-
   const handleOpenAddForm = () => {
     setFormData(initialFormState);
     setEditingId(null);
     setIsFormOpen(true);
+    setLocationResults([]);
   };
 
   const handleOpenEditForm = (event) => {
@@ -127,37 +108,66 @@ const MyEvents = () => {
     });
     setEditingId(event.id);
     setIsFormOpen(true);
+    setLocationResults([]);
   };
 
-  const handleDeleteEvent = (id) => {
+  const handleDeleteEvent = async (id) => {
     if(window.confirm("Are you sure you want to delete this event?")) {
+      await supabase.from('events').delete().eq('id', id);
       setEventData(prev => prev.filter(e => e.id !== id));
     }
   };
 
-  const handleSaveEvent = (e) => {
+  const handleSaveEvent = async (e) => {
     e.preventDefault();
-    const theme = getCategoryTheme(formData.category);
+    if (!userId) return;
     
     const newEventData = {
-      id: editingId || Date.now(),
       title: formData.title,
       location: formData.location,
       price: formData.price,
       date: formData.date,
       category: formData.category,
-      typeColor: theme.color,
-      tags: [{ label: formData.category, styleClass: theme.styleClass }]
+      user_id: userId
     };
 
     if (editingId) {
-      setEventData(prev => prev.map(ev => ev.id === editingId ? { ...ev, ...newEventData } : ev));
+      const { data, error } = await supabase.from('events').update(newEventData).eq('id', editingId).select();
+      if(data && !error) {
+        setEventData(prev => prev.map(ev => ev.id === editingId ? generateDynamicProps(data[0]) : ev));
+      }
     } else {
-      setEventData(prev => [...prev, newEventData]);
-      setActiveFilter('All Events'); 
+      const { data, error } = await supabase.from('events').insert([newEventData]).select();
+      if(data && !error) {
+        setEventData(prev => [...prev, generateDynamicProps(data[0])]);
+        setActiveFilter('All Events'); 
+      }
     }
     
     setIsFormOpen(false);
+  };
+
+  const handleLocationSearch = async (val) => {
+    setFormData({ ...formData, location: val });
+    if (val.length > 2) {
+      setIsSearchingLocation(true);
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&limit=5`);
+        const data = await res.json();
+        setLocationResults(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsSearchingLocation(false);
+      }
+    } else {
+      setLocationResults([]);
+    }
+  };
+
+  const handleSelectLocation = (locName) => {
+    setFormData({ ...formData, location: locName });
+    setLocationResults([]);
   };
 
   // --- 5. FILTER & SEARCH ---
@@ -170,12 +180,18 @@ const MyEvents = () => {
   });
 
   // --- 6. CALENDAR GENERATION ---
-  const currentYear = 2026;
-  const currentMonth = 2; // March
+  const currentYear = calendarDate.getFullYear();
+  const currentMonth = calendarDate.getMonth();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay();
   const blanks = Array(firstDayOfMonth).fill(null);
   const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+
+  const handlePrevMonth = () => setCalendarDate(new Date(currentYear, currentMonth - 1, 1));
+  const handleNextMonth = () => setCalendarDate(new Date(currentYear, currentMonth + 1, 1));
+  const handleToday = () => setCalendarDate(new Date());
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   return (
     <div className={styles.appContainer}>
@@ -202,7 +218,7 @@ const MyEvents = () => {
               <span className={styles.searchIcon}>🔍</span>
             </div>
             <div className={styles.infoPills}>
-              <span className={styles.pill}>Day - 28°C</span>
+              <span className={styles.pill}>Day - {temperature}°C</span>
               <span className={styles.pill}>{userLocation}</span>
               <span className={styles.pill}>{currentDate}</span>
             </div>
@@ -301,9 +317,18 @@ const MyEvents = () => {
               </div>
               
               <div className={styles.formRow}>
-                <div className={styles.formGroup}>
+                <div className={styles.formGroup} style={{ position: 'relative' }}>
                   <label>Location</label>
-                  <input required type="text" value={formData.location} onChange={e => setFormData({...formData, location: e.target.value})} placeholder="City, Area" />
+                  <input required type="text" value={formData.location} onChange={e => handleLocationSearch(e.target.value)} placeholder="City, Area" />
+                  {locationResults.length > 0 && (
+                    <div className={styles.autocompleteDropdown} style={{ position: 'absolute', top: '100%', left: 0, right: 0, backgroundColor: 'white', border: '1px solid #ddd', zIndex: 10, maxHeight: '150px', overflowY: 'auto', borderRadius: '4px' }}>
+                      {locationResults.map((loc, i) => (
+                        <div key={i} onClick={() => handleSelectLocation(loc.display_name)} style={{ padding: '8px', cursor: 'pointer', borderBottom: '1px solid #eee', color: 'black', fontSize: '12px' }}>
+                          {loc.display_name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div className={styles.formGroup}>
                   <label>Price / Cost</label>
@@ -339,12 +364,12 @@ const MyEvents = () => {
           <div className={styles.calendarModal} onClick={(e) => e.stopPropagation()}>
             <div className={styles.calHeader}>
               <div className={styles.calHeaderLeft}>
-                <button className={styles.calTodayBtn}>Today</button>
+                <button className={styles.calTodayBtn} onClick={handleToday}>Today</button>
                 <div className={styles.calArrows}>
-                  <span>&lt;</span>
-                  <span>&gt;</span>
+                  <span onClick={handlePrevMonth} style={{ cursor: 'pointer', userSelect: 'none' }}>&lt;</span>
+                  <span onClick={handleNextMonth} style={{ cursor: 'pointer', userSelect: 'none' }}>&gt;</span>
                 </div>
-                <h2>March 2026</h2>
+                <h2>{monthNames[currentMonth]} {currentYear}</h2>
               </div>
               <div className={styles.calHeaderRight}>
                 <button className={styles.calCloseBtn} onClick={() => setIsCalendarOpen(false)}>✕</button>
@@ -356,11 +381,14 @@ const MyEvents = () => {
             <div className={styles.calGrid}>
               {blanks.map((_, i) => <div key={`blank-${i}`} className={styles.calCellEmpty}></div>)}
               {days.map(day => {
-                const dateStr = `${currentYear}-0${currentMonth + 1}-0${day}`.replace('-00', '-0').replace('-010','-10').replace('-011','-11').replace('-012','-12').replace('-013','-13').replace('-014','-14').replace('-015','-15').replace('-016','-16').replace('-017','-17').replace('-018','-18').replace('-019','-19').replace('-020','-20').replace('-021','-21').replace('-022','-22').replace('-023','-23').replace('-024','-24').replace('-025','-25').replace('-026','-26').replace('-027','-27').replace('-028','-28').replace('-029','-29').replace('-030','-30').replace('-031','-31');
+                const monthStr = String(currentMonth + 1).padStart(2, '0');
+                const dayStr = String(day).padStart(2, '0');
+                const dateStr = `${currentYear}-${monthStr}-${dayStr}`;
                 const dayEvents = eventData.filter(e => e.date === dateStr);
+                const hasEvent = dayEvents.length > 0;
                 return (
-                  <div key={day} className={styles.calCell}>
-                    <span className={styles.calDayNum}>{day}</span>
+                  <div key={day} className={styles.calCell} style={hasEvent ? { backgroundColor: 'rgba(94, 224, 147, 0.1)', border: '1px solid #5EE093' } : {}}>
+                    <span className={styles.calDayNum} style={hasEvent ? { fontWeight: 'bold', color: '#2C3E50' } : {}}>{day}</span>
                     <div className={styles.calEventsContainer}>
                       {dayEvents.map(ev => (
                         <div key={ev.id} className={styles.calEventPill} style={{ backgroundColor: ev.typeColor }}>
