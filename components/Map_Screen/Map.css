@@ -1,0 +1,607 @@
+/* map.css - Mobile‑optimized styles */
+
+/* Force full height on html, body, and root */
+html, body, #root, #__next {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.map-screen-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  font-family: 'Segoe UI', 'Roboto', system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+  position: relative;
+  pointer-events: none;
+}
+
+.map-main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  padding-left: 10px;
+  pointer-events: auto;
+}
+
+/* Weather & traffic cards */
+.pill-card {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 25px;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  white-space: nowrap;
+  transition: transform 0.2s;
+  cursor: pointer;
+}
+
+.pill-card:hover {
+  transform: scale(1.02);
+}
+
+.weather-temp {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.weather-feels {
+  font-size: 10px;
+  opacity: 0.9;
+}
+
+.weather-divider {
+  width: 1px;
+  height: 25px;
+  background: rgba(255,255,255,0.3);
+  margin: 0 2px;
+}
+
+.weather-condition {
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.weather-location {
+  font-size: 9px;
+  opacity: 0.9;
+}
+
+.traffic-card {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 25px;
+  gap: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.traffic-heavy { background: #FFEBEE; }
+.traffic-moderate { background: #FFF3E0; }
+.traffic-light { background: #E8F5E9; }
+
+.traffic-icon { font-size: 20px; }
+.traffic-level { font-weight: 700; font-size: 14px; }
+.traffic-divider { width: 1px; height: 25px; background: rgba(0,0,0,0.15); }
+.traffic-stats { font-size: 12px; color: #444; display: flex; gap: 12px; }
+.traffic-delay { font-size: 12px; font-weight: 600; }
+
+/* Search panel */
+.search-panel {
+  background: rgba(255,255,255,0.97);
+  border-radius: 18px;
+  padding: 12px 14px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.13);
+}
+
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-input-container {
+  position: relative;
+  flex: 1;
+}
+
+.search-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  border-radius: 12px;
+  padding: 8px 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  gap: 8px;
+}
+
+.search-input-icon { font-size: 15px; }
+.search-input {
+  border: none;
+  outline: none;
+  font-size: 13px;
+  flex: 1;
+  color: #1A365D;
+  background: transparent;
+}
+.search-loading { font-size: 11px; color: #aaa; }
+
+/* Autocomplete */
+.autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: white;
+  border-radius: 12px;
+  margin-top: 4px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  overflow: hidden;
+}
+.autocomplete-item {
+  padding: 10px 14px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  color: #333;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: #EBF4FF; }
+
+/* Buttons */
+.btn-my-location {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #2C5282;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.mode-button {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s;
+  background: #EDF2F7;
+}
+.mode-button-active {
+  background: #2C5282;
+  transform: scale(1.12);
+}
+
+.btn-go {
+  margin-left: auto;
+  padding: 7px 20px;
+  border-radius: 10px;
+  border: none;
+  background: #2C5282;
+  color: white;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+.btn-go:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.btn-undo {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: none;
+  background: #FF9800;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-clear {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: none;
+  background: #FED7D7;
+  color: #C53030;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.route-error {
+  font-size: 12px;
+  color: #E53E3E;
+  padding: 5px 10px;
+  background: #FFF5F5;
+  border-radius: 8px;
+}
+
+.route-info {
+  display: flex;
+  gap: 12px;
+  padding: 7px 12px;
+  background: #EBF8FF;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2C5282;
+}
+
+/* Filter row */
+.filter-row {
+  background: white;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  z-index: 2;
+  flex-shrink: 0;
+}
+.filter-title {
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #666;
+}
+.filter-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.filter-button {
+  padding: 4px 10px;
+  border-radius: 15px;
+  border: none;
+  background: #EDF2F7;
+  color: #333;
+  cursor: pointer;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.filter-button-active {
+  background: #2C5282;
+  color: white;
+}
+
+/* Map wrapper - CRITICAL FIX FOR MOBILE */
+.map-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 300px; /* fallback */
+  border-radius: 24px;
+  border: 6px solid #2C5282;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.leaflet-map {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.map-loading-indicator {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(0,0,0,0.7);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  z-index: 1000;
+}
+
+/* Map controls */
+.map-controls {
+  position: absolute;
+  right: 14px;
+  top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 1000;
+}
+.map-control-btn {
+  background-color: white;
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  font-size: 18px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.map-control-divider {
+  height: 1px;
+  background: #eee;
+  margin: 4px 0;
+}
+
+/* Place marker on map */
+.place-marker {
+  width: 28px;
+  height: 28px;
+  border: 2px solid white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+.popup-reroute-btn {
+  margin-top: 8px;
+  padding: 5px 10px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+}
+
+/* Sidebar */
+.map-places-sidebar {
+  width: 280px;
+  background-color: #81D4FA;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  pointer-events: auto;
+}
+.sidebar-header {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1A365D;
+  margin: 0 0 4px;
+  text-align: center;
+}
+.sidebar-subheader {
+  font-size: 10px;
+  color: #2C5282;
+  text-align: center;
+  margin: 0 0 6px;
+  opacity: 0.8;
+}
+.place-item {
+  background-color: white;
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.18s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.place-item-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.place-icon-circle {
+  width: 45px;
+  height: 40px;
+  border-radius: 10px;
+  background: #EDF2F7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.place-details {
+  flex: 1;
+  min-width: 0;
+}
+.place-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1A365D;
+  margin-bottom: 4px;
+}
+.place-meta {
+  font-size: 10px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.btn-reroute {
+  padding: 6px 10px;
+  background: #FF9800;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  width: 100%;
+}
+.rerouted-box {
+  margin-top: 12px;
+  padding: 12px;
+  background: #FFF3E0;
+  border-radius: 12px;
+  border: 1px solid #FF9800;
+}
+.rerouted-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #E65100;
+  margin-bottom: 8px;
+}
+.rerouted-destination {
+  font-size: 11px;
+  color: #BF360C;
+  margin-bottom: 8px;
+}
+
+/* ========== MOBILE RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .map-main-panel {
+    padding: 8px;
+    gap: 8px;
+    margin-right: 0 !important;
+  }
+
+  .map-places-sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 45vh;
+    background-color: #81D4FA;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.15);
+    z-index: 1001;
+    padding: 12px;
+    overflow-y: auto;
+  }
+
+  .pill-card, .traffic-card {
+    white-space: normal;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 12px;
+  }
+
+  .traffic-stats {
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .search-panel {
+    padding: 10px;
+  }
+
+  .search-row {
+    flex-wrap: wrap;
+  }
+
+  .btn-my-location {
+    width: 100%;
+    text-align: center;
+  }
+
+  .action-row {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-go, .btn-undo, .btn-clear {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+
+  .route-info {
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+  }
+
+  .filter-buttons {
+    gap: 6px;
+  }
+
+  .filter-button {
+    font-size: 10px;
+    padding: 3px 8px;
+  }
+
+  .map-wrapper {
+    border-width: 3px;
+  }
+
+  .place-item {
+    padding: 8px;
+  }
+
+  .place-icon-circle {
+    width: 38px;
+    height: 34px;
+    font-size: 18px;
+  }
+
+  .place-name {
+    font-size: 10px;
+  }
+
+  .place-meta {
+    font-size: 9px;
+  }
+
+  .btn-reroute {
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .map-main-panel {
+    padding: 6px;
+  }
+
+  .search-input-wrapper {
+    padding: 6px 10px;
+  }
+
+  .search-input {
+    font-size: 12px;
+  }
+
+  .mode-button {
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+
+  .pill-card, .traffic-card {
+    font-size: 12px;
+  }
+
+  .traffic-stats {
+    font-size: 10px;
+  }
+
+  .traffic-delay {
+    font-size: 10px;
+  }
+
+  .route-info {
+    font-size: 10px;
+  }
+}
