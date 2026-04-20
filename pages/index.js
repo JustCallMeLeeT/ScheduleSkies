@@ -60,6 +60,27 @@ export default function Home() {
                 ]} />
               </div>
             </section>
+        
+        <div className='home-header'>
+        <WeatherOverview username={username} />
+        </div>
+        <div className="dashboard-content">
+          <section className="row">
+            <div className="col">
+              <ForecastCards />
+            </div>
+            <div className="col">
+              <TrafficInfo />
+            </div>
+            <div className="col">
+              <Notifications notes={[
+                {type:'rain',message:'You need to make real notifications!!!',detail:'Don\'t Forget to Bring an Umbrella!'},
+                {type:'heat',message:'High heat index expected tomorrow: 40°C',detail:'Stay Hydrated and Minimize Outdoor Activity'},
+                {type:'rain',message:'It might rain on your trip this weekend',detail:'Don\'t Forget to Bring an Umbrella!'},
+                {type:'heat',message:'High heat index expected tomorrow: 40°C',detail:'Stay Hydrated and Minimize Outdoor Activity'}
+              ]} />
+            </div>
+          </section>
 
             <section className="row">
               <div className="col wide">
