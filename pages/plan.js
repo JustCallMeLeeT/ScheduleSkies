@@ -5,6 +5,7 @@ import { getLocationWithFallback } from "@/lib/getLocation";
 import { buildWeatherContext, detectScheduleConflicts } from '@/lib/aiContext';
 import styles from '../styles/event.module.css';
 import Sidebar from '@/components/Sidebar';
+import ShareModal from '@/components/ShareModal';
 
 const MAP_PICK_STORAGE_KEY = 'scheduleSkies_mapPick';
 const PLAN_RESTORE_STORAGE_KEY = 'scheduleSkies_planRestore';
@@ -79,6 +80,10 @@ const MyEvents = () => {
   const [aiSuggestions, setAiSuggestions] = useState([]);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [showAiPanel, setShowAiPanel] = useState(false);
+
+  // Share / Collaboration State
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [selectedEventForShare, setSelectedEventForShare] = useState(null);
 
   const categories = ['All Events', 'Food', 'SightSeeing', 'Hotel', 'Leisure'];
   const formCategories = ['Food', 'SightSeeing', 'Hotel', 'Leisure'];
@@ -1010,13 +1015,20 @@ const MyEvents = () => {
                           </div>
                         )}
 
-                        {/* Itinerary & Navigate Buttons */}
+                        {/* Itinerary, Share & Navigate Buttons */}
                         <div className={styles.cardBtnRow}>
                           <button
                             className={styles.itineraryBtn}
                             onClick={() => handleOpenItinerary(event)}
                           >
                             📋 Itinerary
+                          </button>
+                          <button
+                            className={styles.itineraryBtn}
+                            style={{ background: 'linear-gradient(135deg, #4A90D9, #6D7DB9)', color: 'white', border: 'none' }}
+                            onClick={() => { setSelectedEventForShare(event); setIsShareModalOpen(true); }}
+                          >
+                            🔗 Share
                           </button>
                           {(event.latitude && event.longitude) ? (
                             <button
@@ -1386,6 +1398,13 @@ const MyEvents = () => {
             <div className={styles.itineraryFooter}>
               <span className={styles.activityCount}>{activities.length} activit{activities.length === 1 ? 'y' : 'ies'}</span>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  className={styles.navigateBtnLg}
+                  style={{ background: 'linear-gradient(135deg, #4A90D9, #6D7DB9)' }}
+                  onClick={() => { setSelectedEventForShare(selectedEventForItinerary); setIsShareModalOpen(true); }}
+                >
+                  🔗 Share Itinerary
+                </button>
                 {(selectedEventForItinerary.latitude && selectedEventForItinerary.longitude) && (
                   <button className={styles.navigateBtnLg} onClick={() => handleNavigateToVenue(selectedEventForItinerary)}>
                     🧭 Navigate to Venue
@@ -1483,6 +1502,14 @@ const MyEvents = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* --- SHARE MODAL --- */}
+      {isShareModalOpen && selectedEventForShare && (
+        <ShareModal
+          event={selectedEventForShare}
+          onClose={() => { setIsShareModalOpen(false); setSelectedEventForShare(null); }}
+        />
       )}
     </div>
   );
