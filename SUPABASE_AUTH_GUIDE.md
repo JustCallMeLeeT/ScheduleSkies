@@ -382,3 +382,68 @@ CREATE POLICY "Users can delete their own activities"
 -- ============================================================================
 -- SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'events';
 -- SELECT * FROM public.itinerary_activities LIMIT 1;
+
+-- ============================================================================
+-- COLLABORATION & SHARING FEATURE: SCHEMA UPDATES
+-- Run this in Supabase SQL Editor (Database > SQL Editor > New Query)
+-- ============================================================================
+
+-- 1. EVENT SHARES table
+CREATE TABLE IF NOT EXISTS public.event_shares (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id     UUID NOT NULL REFERENCES public.events(id) ON DELETE CASCADE,
+  owner_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  token        TEXT NOT NULL UNIQUE,
+  role         TEXT NOT NULL DEFAULT 'view',   -- 'view' | 'edit'
+  label        TEXT,
+  created_at   TIMESTAMPTZ DEFAULT now(),
+  expires_at   TIMESTAMPTZ                     -- NULL = never expires
+);
+
+ALTER TABLE public.event_shares ENABLE ROW LEVEL SECURITY;
+
+-- Owner can fully manage their shares
+CREATE POLICY "Owner manages shares"
+  ON public.event_shares FOR ALL
+  USING (auth.uid() = owner_id)
+  WITH CHECK (auth.uid() = owner_id);
+
+-- Anyone can read a share by token (needed for public shared view)
+CREATE POLICY "Anyone can read share by token"
+  ON public.event_shares FOR SELECT
+  USING (true);
+
+-- 2. SHARE COLLABORATORS table (tracks who opened a shared link)
+CREATE TABLE IF NOT EXISTS public.share_collaborators (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  share_id    UUID NOT NULL REFERENCES public.event_shares(id) ON DELETE CASCADE,
+  user_id     UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  guest_label TEXT,
+  joined_at   TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE public.share_collaborators ENABLE ROW LEVEL SECURITY;
+
+-- Share owner can see who joined
+CREATE POLICY "Share owner views collaborators"
+  ON public.share_collaborators FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.event_shares es
+      WHERE es.id = share_id AND es.owner_id = auth.uid()
+    )
+  );
+
+-- Anyone can insert their own collaborator record
+CREATE POLICY "Anyone can insert collaborator record"
+  ON public.share_collaborators FOR INSERT
+  WITH CHECK (true);
+
+-- 3. Enable Realtime for itinerary_activities
+-- In Supabase Dashboard: Database > Replication > Tables > enable itinerary_activities
+
+-- ============================================================================
+-- VERIFICATION QUERIES (Collaboration)
+-- ============================================================================
+-- SELECT * FROM public.event_shares LIMIT 5;
+-- SELECT * FROM public.share_collaborators LIMIT 5;
