@@ -43,20 +43,34 @@ export default function UpcomingPlans({ plans = [] }) {
 
 
   function formatTwelveHour(timeString) {
-    let [hours, minutes] = timeString.split(':');
-    hours = parseInt(hours);
+    if (!timeString) return '—';
+    const parts = timeString.split(':');
+    if (parts.length < 2) return timeString;
+    let hours = parseInt(parts[0]);
+    const minutes = parts[1];
     const ampm = hours >= 12 ? 'PM' : 'AM';
     hours = hours % 12 || 12;
     return `${hours}:${minutes} ${ampm}`;
   }
 
   function formatDate(date) {
+    if (!date) return '—';
     const dateObj = new Date(`${date}T00:00:00`);
+    if (isNaN(dateObj)) return '—';
     return dateObj.toLocaleDateString('en-US', {
       month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
+  }
+
+  function getEventTime(event) {
+    if (event.time) return event.time;
+    if (event.start_datetime) {
+      const d = new Date(event.start_datetime);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+    return null;
   }
 
   function getEventDistance(event) {
@@ -94,7 +108,7 @@ export default function UpcomingPlans({ plans = [] }) {
                 <div className={styles.event}>
                   <div className={styles.date_and_time}>
                     <div className={styles.date}>{formatDate(event.date)}</div>
-                    <div className={styles.time}>{formatTwelveHour(event.time)}</div>
+                    <div className={styles.time}>{formatTwelveHour(getEventTime(event))}</div>
                   </div>
                   <div className={styles.title_and_location}>
                     <div className={styles.title}>{event.title}</div>
