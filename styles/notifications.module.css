@@ -7,6 +7,7 @@
   border-radius: 25px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   gap: 1rem;
+  min-width: 275px;
 }
 
 .title {
@@ -149,6 +150,12 @@
   font-size: 11px;
   color: #aaa;
   margin-top: 3px;
+}
+
+@media (max-width: 768px){
+  .container {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 425px){

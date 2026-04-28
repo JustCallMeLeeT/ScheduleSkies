@@ -10,9 +10,11 @@ const iconFor = (type) => {
   return <FaExclamationTriangle />
 }
 
+
 export default function Notifications({ userId }) {
   const [notes, setNotes] = useState([])
   const [menuOpen, setMenuOpen] = useState(false)
+  const [loading, setLoading] = useState(true);
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -51,6 +53,7 @@ export default function Notifications({ userId }) {
   }, [])
 
   async function fetchNotes() {
+    setLoading(true)
     console.log("[fetchNotes] Fetching notifications for user_id:", userId);
 
     const { data, error } = await supabase
@@ -67,6 +70,7 @@ export default function Notifications({ userId }) {
 
     console.log(`[fetchNotes] Got ${data?.length ?? 0} notification(s):`, data);
     setNotes(data ?? [])
+    setLoading(false)
   }
 
   async function markRead(id) {
@@ -120,7 +124,12 @@ export default function Notifications({ userId }) {
           )}
         </div>
       </div>
-
+{loading ? (
+      <div className="spinner-container">
+        <div className="loading-spinner"></div>
+      </div>
+    ) : (
+      <>
       <div className={styles.notificationsContainer}>
         {notes.length === 0 && (
           <div style={{
@@ -149,7 +158,7 @@ export default function Notifications({ userId }) {
                 {new Date(n.sent_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
-            {!n.read && (
+            {!n.is_read && (
               <button
                 className={styles.readBtn}
                 onClick={() => markRead(n.id)}
@@ -160,6 +169,8 @@ export default function Notifications({ userId }) {
           </div>
         ))}
       </div>
+      </>
+      )}
     </div>
   )
 }
