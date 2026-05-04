@@ -57,6 +57,18 @@ export default function Home() {
   const [copyDone, setCopyDone] = useState(false)
   const [accountGateOpen, setAccountGateOpen] = useState(false)
   const [showcaseIndex, setShowcaseIndex] = useState(0)
+  const [activeSlot, setActiveSlot] = useState(null)
+
+  const closeSlotModal = () => setActiveSlot(null)
+
+  useEffect(() => {
+    if (!activeSlot) return
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape') closeSlotModal()
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [activeSlot])
 
   const isOnlineAttempt = demoMode !== 'offline'
   const lockPrompt = loading && isOnlineAttempt
@@ -374,18 +386,40 @@ export default function Home() {
                         <div className={styles.dayCardTitle}>{day.dayLabel || `Day ${di + 1}`}</div>
                         <div className={styles.slotList}>
                           {(day.slots || []).map((slot, si) => (
-                            <div key={`${slot.title}-${si}`} className={styles.slotCard}>
-                              <div className={styles.slotTime}>{slot.time || '—'}</div>
+                            <button
+                              key={`${slot.title}-${si}`}
+                              type="button"
+                              className={styles.slotCard}
+                              onClick={() => setActiveSlot({ slot, dayLabel: day.dayLabel || `Day ${di + 1}` })}
+                              aria-label={`View details for ${slot.title || 'Activity'}`}
+                            >
+                              <div className={styles.slotImageWrap} aria-hidden="true">
+                                <img
+                                  className={styles.slotImage}
+                                  src={`/api/place-photo?q=${encodeURIComponent(
+                                    `${slot.title || ''} ${slot.location || 'Cebu City'}`.trim()
+                                  )}&w=360`}
+                                  alt=""
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/images/logo.png'
+                                  }}
+                                />
+                              </div>
                               <div className={styles.slotBody}>
+                                <div className={styles.slotTopRow}>
+                                  <div className={styles.slotTime}>{slot.time || '—'}</div>
+                                  <span className={styles.slotCategory}>{slot.category || 'Leisure'}</span>
+                                </div>
                                 <div className={styles.slotTitle}>{slot.title || 'Activity'}</div>
                                 <div className={styles.slotMeta}>{slot.location || 'Cebu'}</div>
-                                <span className={styles.slotCategory}>{slot.category || 'Leisure'}</span>
                                 {slot.estimatedCostPHP ? (
                                   <div className={styles.slotCost}>{slot.estimatedCostPHP}</div>
                                 ) : null}
                                 {slot.notes ? <p className={styles.slotNotes}>{slot.notes}</p> : null}
                               </div>
-                            </div>
+                            </button>
                           ))}
                         </div>
                       </div>
@@ -406,6 +440,65 @@ export default function Home() {
                 </>
               ) : null}
             </div>
+
+            {activeSlot ? (
+              <div className={styles.slotModalBackdrop} role="presentation" onClick={closeSlotModal}>
+                <div
+                  className={styles.slotModal}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-labelledby="slot-modal-title"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className={styles.slotModalHeader}>
+                    <div style={{ minWidth: 0 }}>
+                      <div className={styles.slotModalDay}>{activeSlot.dayLabel}</div>
+                      <h2 id="slot-modal-title" className={styles.slotModalTitle}>
+                        {activeSlot.slot?.title || 'Activity'}
+                      </h2>
+                      <div className={styles.slotModalSubtitle}>
+                        {activeSlot.slot?.time ? <span>{activeSlot.slot.time}</span> : null}
+                        {activeSlot.slot?.location ? <span> · {activeSlot.slot.location}</span> : null}
+                      </div>
+                    </div>
+                    <button type="button" className={styles.slotModalClose} onClick={closeSlotModal} aria-label="Close">
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className={styles.slotModalContent}>
+                    <div className={styles.slotModalImageWrap} aria-hidden="true">
+                      <img
+                        className={styles.slotModalImage}
+                        src={`/api/place-photo?q=${encodeURIComponent(
+                          `${activeSlot.slot?.title || ''} ${activeSlot.slot?.location || 'Cebu City'}`.trim()
+                        )}&w=980`}
+                        alt=""
+                        loading="eager"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          e.currentTarget.src = '/images/logo.png'
+                        }}
+                      />
+                    </div>
+
+                    <div className={styles.slotModalMeta}>
+                      <div className={styles.slotModalPills}>
+                        <span className={styles.slotModalPill}>{activeSlot.slot?.category || 'Leisure'}</span>
+                        {activeSlot.slot?.estimatedCostPHP ? (
+                          <span className={styles.slotModalPillSecondary}>{activeSlot.slot.estimatedCostPHP}</span>
+                        ) : null}
+                      </div>
+                      {activeSlot.slot?.notes ? (
+                        <p className={styles.slotModalNotes}>{activeSlot.slot.notes}</p>
+                      ) : (
+                        <p className={styles.slotModalNotesMuted}>No extra notes for this activity.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </section>
         ) : (
           <section id="ai-demo" className={styles.demoSection}>
