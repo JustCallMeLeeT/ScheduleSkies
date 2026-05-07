@@ -118,8 +118,19 @@ const MyEvents = () => {
   const formCategories = ['Food', 'SightSeeing', 'Hotel', 'Leisure'];
 
   // --- HELPERS ---
-  const getTimePart = (dt) => dt && dt.includes('T') ? dt.split('T')[1].substring(0, 5) : '12:00';
-  const getDatePart = (dt) => dt && dt.includes('T') ? dt.split('T')[0] : new Date().toISOString().split('T')[0];
+  const getTimePart = (dt) => {
+    if (!dt || !dt.includes('T')) return '12:00';
+    const timeStr = dt.split('T')[1];
+    const [h, m] = timeStr.split(':');
+    const hh = (h || '12').padStart(2, '0');
+    const mm = (m || '00').substring(0, 2).padStart(2, '0');
+    return `${hh}:${mm}`;
+  };
+
+  const getDatePart = (dt) => {
+    if (!dt) return new Date().toISOString().split('T')[0];
+    return dt.includes('T') ? dt.split('T')[0] : dt;
+  };
 
   // Helper to display 24h string (14:30) as 12h string (2:30 PM)
   const formatDisplayTime = (time24) => {
@@ -389,6 +400,20 @@ const MyEvents = () => {
     if (!userId) return;
     setFormError('');
 
+    // --- NEW: Defensively validate date strings before doing anything ---
+    const isStartInvalid = formData.start_datetime && isNaN(new Date(formData.start_datetime).getTime());
+    const isEndInvalid = formData.end_datetime && isNaN(new Date(formData.end_datetime).getTime());
+
+    if (isStartInvalid) {
+      setFormError('❌ Start date/time is invalid or incomplete. Please re-select the time.');
+      return;
+    }
+    if (isEndInvalid) {
+      setFormError('❌ End date/time is invalid or incomplete. Please re-select the time.');
+      return;
+    }
+    // ------------------------------------------------------------------
+
     if (formData.start_datetime) {
       const startTime = new Date(formData.start_datetime);
       const now = new Date();
@@ -421,6 +446,7 @@ const MyEvents = () => {
       category: formData.category,
       user_id: userId,
       venue: formData.venue || null,
+      // Safe to convert to ISO because of checks above
       start_datetime: formData.start_datetime ? new Date(formData.start_datetime).toISOString() : null,
       end_datetime: formData.end_datetime ? new Date(formData.end_datetime).toISOString() : null,
       latitude: formData.latitude || null,
@@ -1497,7 +1523,9 @@ const MyEvents = () => {
                               time={getTimePart(formData.start_datetime)}
                               onChange={(data) => {
                                 const datePart = getDatePart(formData.start_datetime);
-                                setFormData({ ...formData, start_datetime: `${datePart}T${data.formatted24}` });
+                                const hh = String(data.hour).padStart(2, '0');
+                                const mm = String(data.minute).padStart(2, '0');
+                                setFormData({ ...formData, start_datetime: `${datePart}T${hh}:${mm}` });
                               }}
                               onDoneClick={() => setShowEventStartClock(false)}
                               switchToMinuteOnHourSelect
@@ -1544,7 +1572,9 @@ const MyEvents = () => {
                               time={getTimePart(formData.end_datetime)}
                               onChange={(data) => {
                                 const datePart = getDatePart(formData.end_datetime) || getDatePart(formData.start_datetime);
-                                setFormData({ ...formData, end_datetime: `${datePart}T${data.formatted24}` });
+                                const hh = String(data.hour).padStart(2, '0');
+                                const mm = String(data.minute).padStart(2, '0');
+                                setFormData({ ...formData, end_datetime: `${datePart}T${hh}:${mm}` });
                               }}
                               onDoneClick={() => setShowEventEndClock(false)}
                               switchToMinuteOnHourSelect
@@ -1798,7 +1828,9 @@ const MyEvents = () => {
                                     time={getTimePart(activityForm.start_time)}
                                     onChange={(data) => {
                                       const datePart = getDatePart(activityForm.start_time) || (selectedEventForItinerary?.start_datetime?.split('T')[0] || new Date().toISOString().split('T')[0]);
-                                      setActivityForm({ ...activityForm, start_time: `${datePart}T${data.formatted24}` });
+                                      const hh = String(data.hour).padStart(2, '0');
+                                      const mm = String(data.minute).padStart(2, '0');
+                                      setActivityForm({ ...activityForm, start_time: `${datePart}T${hh}:${mm}` });
                                     }}
                                     onDoneClick={() => setShowActStartClock(false)}
                                     switchToMinuteOnHourSelect
@@ -1846,7 +1878,9 @@ const MyEvents = () => {
                                     time={getTimePart(activityForm.end_time)}
                                     onChange={(data) => {
                                       const datePart = getDatePart(activityForm.end_time) || (getDatePart(activityForm.start_time) || (selectedEventForItinerary?.start_datetime?.split('T')[0] || new Date().toISOString().split('T')[0]));
-                                      setActivityForm({ ...activityForm, end_time: `${datePart}T${data.formatted24}` });
+                                      const hh = String(data.hour).padStart(2, '0');
+                                      const mm = String(data.minute).padStart(2, '0');
+                                      setActivityForm({ ...activityForm, end_time: `${datePart}T${hh}:${mm}` });
                                     }}
                                     onDoneClick={() => setShowActEndClock(false)}
                                     switchToMinuteOnHourSelect
