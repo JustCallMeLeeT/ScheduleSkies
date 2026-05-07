@@ -27,6 +27,7 @@
   gap: 1rem;
   min-height: 80%;
   max-height: 300px;
+  overflow-x: hidden;
 }
 
 .card {
@@ -34,6 +35,10 @@
   background-color: #fff;
   border-radius: 15px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: box-shadow 0.25s ease;
+  border-radius: 16px;
+  position: relative;
 }
 
 .image {
@@ -69,6 +74,40 @@
 
 .star {
   color: #f1c40f;
+}
+
+/* ─── Card Hover Glow ─────────────────────────────────────────────── */
+.card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  box-shadow: 0 0 0px 0px rgba(99, 179, 237, 0);
+  transition: box-shadow 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card:hover {
+  box-shadow:
+    0 8px 32px rgba(99, 179, 237, 0.35),
+    0 0 0 1.5px rgba(99, 179, 237, 0.5);
+}
+
+.card:hover::after {
+  box-shadow: 0 0 24px 4px rgba(99, 179, 237, 0.25);
+}
+
+.card:active {
+  transform: translateY(-2px) scale(1.008);
+}
+
+.card .card-image {
+  transition: transform 0.4s ease;
+}
+
+.card:hover .card-image {
+  transform: scale(1.05);
 }
 
 @media (max-width: 768px){
