@@ -502,13 +502,31 @@
 
 .slotCard {
   display: grid;
-  grid-template-columns: 5.5rem 1fr;
-  gap: 0.5rem;
+  grid-template-columns: 82px 1fr;
+  gap: 0.65rem;
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 0.5rem 0.6rem;
-  align-items: start;
+  align-items: stretch;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+
+.slotCard:hover {
+  border-color: #bfdbfe;
+  box-shadow: 0 10px 18px rgba(37, 99, 235, 0.08);
+}
+
+.slotCard:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.slotCard {
+  appearance: none;
+  border-width: 1px;
 }
 
 .slotTime {
@@ -517,10 +535,39 @@
   color: #2563eb;
 }
 
+.slotImageWrap {
+  width: 82px;
+  height: 100%;
+  min-height: 82px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.slotImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.slotBody {
+  min-width: 0;
+}
+
+.slotTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .slotTitle {
   font-weight: 600;
   color: #0f172a;
   font-size: 0.9rem;
+  margin-top: 0.15rem;
 }
 
 .slotMeta {
@@ -531,7 +578,6 @@
 
 .slotCategory {
   display: inline-block;
-  margin-top: 0.35rem;
   font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -540,6 +586,7 @@
   background: #eef2ff;
   padding: 0.15rem 0.45rem;
   border-radius: 6px;
+  white-space: nowrap;
 }
 
 .slotCost {
@@ -554,6 +601,182 @@
   font-size: 0.8rem;
   color: #475569;
   line-height: 1.4;
+}
+
+.slotModalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(2px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.slotModal {
+  background: #fff;
+  border-radius: 18px;
+  width: 100%;
+  max-width: 920px;
+  max-height: min(86vh, 900px);
+  overflow: hidden;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 35px 70px rgba(15, 23, 42, 0.28);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.slotModalHeader {
+  padding: 1rem 1.1rem 0.85rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.slotModalDay {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.slotModalTitle {
+  margin: 0.35rem 0 0;
+  font-size: 1.35rem;
+  line-height: 1.25;
+  color: #0f172a;
+  word-break: break-word;
+}
+
+.slotModalSubtitle {
+  margin-top: 0.35rem;
+  color: #475569;
+  font-size: 0.92rem;
+}
+
+.slotModalClose {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  border-radius: 999px;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.slotModalContent {
+  padding: 1rem 1.1rem 1.15rem;
+  overflow: auto;
+  overflow-x: hidden;
+  display: grid;
+  gap: 1rem;
+}
+
+.slotModalImageWrap {
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.08));
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  aspect-ratio: 16 / 9;
+}
+
+.slotModalImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.slotModalMeta {
+  display: grid;
+  gap: 0.6rem;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 14px;
+  padding: 0.85rem 0.9rem;
+}
+
+@media (max-width: 520px) {
+  .slotModalBackdrop {
+    padding: 0.75rem;
+  }
+
+  .slotModal {
+    width: 100%;
+    max-height: 92vh;
+    border-radius: 16px;
+  }
+
+  .slotModalHeader {
+    padding: 0.85rem 0.9rem 0.75rem;
+  }
+
+  .slotModalTitle {
+    font-size: 1.15rem;
+  }
+
+  .slotModalContent {
+    padding: 0.85rem 0.9rem 1rem;
+  }
+
+  .slotModalImageWrap {
+    border-radius: 14px;
+    aspect-ratio: 4 / 3;
+  }
+}
+
+.slotModalPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.slotModalPill,
+.slotModalPillSecondary {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+
+.slotModalPill {
+  background: #eef2ff;
+  color: #4338ca;
+  border-color: rgba(67, 56, 202, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.slotModalPillSecondary {
+  background: rgba(16, 185, 129, 0.12);
+  color: #0f766e;
+  border-color: rgba(15, 118, 110, 0.18);
+}
+
+.slotModalNotes {
+  margin: 0;
+  color: #334155;
+  line-height: 1.55;
+  font-size: 0.98rem;
+  white-space: pre-wrap;
+}
+
+.slotModalNotesMuted {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.55;
+  font-size: 0.98rem;
 }
 
 .demoActions {
