@@ -20,6 +20,7 @@ import {
   buildItineraryEventDraft,
   buildActivityDraftsFromStructured,
 } from '@/lib/itineraryImportShared';
+import EventGalleryHeader from '@/components/EventGalleryHeader'
 
 const MAP_PICK_STORAGE_KEY = 'scheduleSkies_mapPick';
 const PLAN_RESTORE_STORAGE_KEY = 'scheduleSkies_planRestore';
@@ -97,7 +98,7 @@ const MyEvents = () => {
   // Progress bar
   const [completedActivities, setCompletedActivities] = useState({});
 
-  const initialFormState = { title: '', location: '', price: '', date: '', category: 'Food', venue: '', start_datetime: '', end_datetime: '', latitude: null, longitude: null };
+  const initialFormState = { title: '', location: '', price: '', date: '', category: 'Food', venue: '', start_datetime: '', end_datetime: '', latitude: null, longitude: null, image_link: '' };
   const [formData, setFormData] = useState(initialFormState);
 
   // AI Suggestions State
@@ -427,7 +428,8 @@ const MyEvents = () => {
       start_datetime: formData.start_datetime ? new Date(formData.start_datetime).toISOString() : null,
       end_datetime: formData.end_datetime ? new Date(formData.end_datetime).toISOString() : null,
       latitude: formData.latitude || null,
-      longitude: formData.longitude || null
+      longitude: formData.longitude || null,
+      image_link: formData.image_link || PLACEHOLDER_IMAGE
     };
 
     if (editingId) {
@@ -484,15 +486,22 @@ const MyEvents = () => {
     }
   };
 
-  const handleSelectLocation = (loc) => {
+  const handleSelectLocation = async (loc) => {
     setFormData({
       ...formData,
       location: loc.display_name,
       latitude: parseFloat(loc.lat),
       longitude: parseFloat(loc.lon)
-    });
-    setLocationResults([]);
-  };
+    })
+    setLocationResults([])
+
+    // Fetch place image in background
+    const imageUrl = await fetchPlaceImage(loc.display_name)
+    setFormData(prev => ({
+      ...prev,
+      image_link: imageUrl || PLACEHOLDER_IMAGE
+    }))
+  }
 
   const handleActivityLocationSearch = async (val) => {
     setActivityForm({ ...activityForm, location: val, latitude: null, longitude: null });
@@ -1061,6 +1070,19 @@ const MyEvents = () => {
     return cellDays;
   };
 
+  const fetchPlaceImage = async (locationName) => {
+    try {
+      const res = await fetch(`/api/place-image?query=${encodeURIComponent(locationName)}`)
+      const data = await res.json()
+      return data.url || null
+    } catch (err) {
+      console.error('Place image fetch failed:', err)
+      return null
+    }
+  }
+
+  const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800&auto=format&fit=crop'
+
   return (
     <div className={styles.appContainer}>
 
@@ -1323,10 +1345,10 @@ const MyEvents = () => {
                         e.stopPropagation();
                         handleOpenEditForm(event)
                       }} className={styles.iconBtnEdit}>✎</button>
-                      <button onClick={() => {
+                      <button onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteEvent(event.id)
-                        }} className={styles.iconBtnDelete}>🗑</button>
+                      }} className={styles.iconBtnDelete}>🗑</button>
                     </div>
                   )}
                 </div>
@@ -1400,11 +1422,41 @@ const MyEvents = () => {
                     🗺️ Pick on map
                   </button>
                 </div>
+
                 <div className={styles.formGroup}>
                   <label>Price / Cost</label>
                   <input required type="text" value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} placeholder="e.g. ₱350/Person" />
                 </div>
               </div>
+
+              {formData.image_link && (
+                  <div style={{
+                    marginTop: '8px',
+                    borderRadius: '10px',
+                    overflow: 'hidden',
+                    height: '120px',
+                    width: '100%',
+                    position: 'relative',
+                    border: '1px solid #e2e8f0'
+                  }}>
+                    <img
+                      src={formData.image_link}
+                      alt="Location preview"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                    <div style={{
+                      position: 'absolute',
+                      bottom: 0, left: 0, right: 0,
+                      padding: '6px 10px',
+                      background: 'rgba(0,0,0,0.5)',
+                      fontSize: '10px',
+                      color: '#fff',
+                      fontWeight: 500
+                    }}>
+                      {formData.image_link.includes('unsplash') ? '🖼️ Placeholder image' : '📍 Location photo from Google'}
+                    </div>
+                  </div>
+                )}
 
               {/* SPLIT DATE AND TIME FOR REACT-TIMEKEEPER CLOCK UI */}
               <div className={styles.formRow}>
@@ -1548,18 +1600,16 @@ const MyEvents = () => {
       {isItineraryOpen && selectedEventForItinerary && (
         <div className={styles.modalOverlay} onClick={() => setIsItineraryOpen(false)}>
           <div className={styles.itineraryModal} onClick={(e) => e.stopPropagation()}>
-            {/* Gradient Header */}
-            <div key={event.id} style={{
-              position: 'relative',
-              backgroundImage: `url(${selectedEventForItinerary.image_link})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              width: '100%',
-              height: '400px'
-            }} >
-              <button className={styles.itineraryCloseBtn} onClick={() => setIsItineraryOpen(false)}>✕</button>
-            </div>
+            
+            {/* Gallery Header */}
+            <EventGalleryHeader
+              event={selectedEventForItinerary}
+              userId={userId}
+              onClose={() => setIsItineraryOpen(false)}
+              onCoverChange={(newUrl) => {
+                setSelectedEventForItinerary(prev => ({ ...prev, image_link: newUrl }))
+              }}
+            />
 
             {/* Body — Progress Bar + Timeline */}
             <div className={styles.itineraryBody}>
@@ -1570,6 +1620,7 @@ const MyEvents = () => {
                       Event Itinerary
                     </div>
                     <h2>{selectedEventForItinerary.title}</h2>
+                    <span className={styles.activityCount}>{activities.length} ACTIVIT{activities.length === 1 ? 'Y' : 'IES'}</span>
                   </div>
                 </div>
 
@@ -1861,7 +1912,6 @@ const MyEvents = () => {
 
             {/* Footer */}
             <div className={styles.itineraryFooter}>
-              <span className={styles.activityCount}>{activities.length} activit{activities.length === 1 ? 'y' : 'ies'}</span>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 <button
                   className={styles.navigateBtnLg}

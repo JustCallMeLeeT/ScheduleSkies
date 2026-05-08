@@ -458,6 +458,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-left: 80px;
 }
 
 .calendarModal {
@@ -604,8 +605,13 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+.formModal::-webkit-scrollbar {
+  display: none;              /* Hide Scrollbar */
 }
 
 @keyframes modalPopUp {
@@ -815,7 +821,7 @@
 /* --- Itinerary Modal --- */
 .itineraryModal {
   background: #ffffff;
-  width: 95%;
+  width: 90%;
   max-width: 720px;
   max-height: 90vh;
   border-radius: 24px;
@@ -883,25 +889,6 @@
   letter-spacing: -0.3px;
 }
 
-.itineraryCloseBtn {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: white;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-  flex-shrink: 0;
-  position: absolute;
-  right: 10px;
-  top: 10px;
-}
-
 .itineraryCloseBtn:hover {
   background: rgba(255, 255, 255, 0.35);
 }
@@ -918,7 +905,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 12px;
   opacity: 0.95;
 }
 
@@ -1187,7 +1174,7 @@
   background: white;
   border-top: 1px solid #e8edf2;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
@@ -1195,7 +1182,7 @@
   background: linear-gradient(135deg, #2C5282, #4A90D9);
   color: white;
   border: none;
-  padding: 10px 24px;
+  padding: 10px 12px;
   border-radius: 14px;
   font-size: 14px;
   font-weight: 700;
@@ -1213,9 +1200,9 @@
 }
 
 .activityCount {
-  font-size: 13px;
+  font-size: 10px;
   color: #64748b;
-  font-weight: 600;
+  font-weight: 800;
 }
 
 /* --- Empty Itinerary --- */
@@ -1628,8 +1615,8 @@
   }
 
   .modalOverlay {
-    align-items: flex-end;
-    padding-bottom: 120px;
+    margin-left: 0;
+    z-index: 10000;
   }
 
   .formModal {
@@ -1660,8 +1647,7 @@
 
   .itineraryModal {
     max-width: 100%;
-    max-height: 95vh;
-    border-radius: 16px 16px 0 0;
+    max-height: 90vh;
   }
 
   .itineraryHeader {
@@ -1677,26 +1663,60 @@
     gap: 8px;
   }
 
+  .venueInfoItem .infoIcon, .venueInfoItem .infoLabel, .venueInfoItem .infoValue{
+    font-size: 10px;
+  }
+
+  .activityName {
+    font-size: 12px;
+  }
+
+  .activityTime .timeBadge {
+    font-size: 8px;
+  }
+
   .itineraryBody {
     padding: 16px 16px;
   }
 
+  .progressLabel {
+    font-size: 10px;
+  }
+
+  .progressPercent {
+    font-size: 10px;
+  }
+
   .itineraryFooter {
     padding: 12px 16px;
-    flex-direction: column;
     gap: 10px;
   }
 
   .navigateBtnLg {
-    width: 100%;
+    font-size: 10px;
     justify-content: center;
-    padding: 12px;
+    padding: 6px;
+  }
+
+  .activityLocation {
+    font-size: 10px;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .activityActions button {
+    font-size: 8px;
   }
 
   .activityFormGrid {
     grid-template-columns: 1fr;
   }
 
+  .addActivityBtn {
+    font-size: 12px;
+  }
   /* Calendar Modal */
   .calendarModal {
     width: 100%;
@@ -1716,6 +1736,26 @@
   .sun,
   .cloud {
     display: none;
+  }
+}
+
+@media (max-width: 650px){
+  .eventCard {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .titleContainer {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .titleContainer p {
+    font-size: 10px;
+  }
+
+  .cardStatusBadge {
+    font-size: 8px;
+    top: 80%;
   }
 }
 
@@ -1740,7 +1780,18 @@
 [data-theme='dark'] .eventCard,
 [data-theme='dark'] .formModal,
 [data-theme='dark'] .formGroup input, 
-[data-theme='dark'] .formGroup select, [data-theme='dark'] .titleContainer {
+[data-theme='dark'] .formGroup select, 
+[data-theme='dark'] .titleContainer,
+[data-theme='dark'] .itineraryBody,
+[data-theme='dark'] .itineraryHeaderContent,
+[data-theme='dark'] .progressContainer,
+[data-theme='dark'] .progressLabel,
+[data-theme='dark'] .activityCard,
+[data-theme='dark'] .activityName,
+[data-theme='dark'] .activityLocation,
+[data-theme='dark'] .searchBar input,
+[data-theme='dark'] .addActivityBtn,
+[data-theme='dark'] .itineraryFooter {
   background-color: #1e293b;
   color: #e2e8f0;
   border-color: #334155;
