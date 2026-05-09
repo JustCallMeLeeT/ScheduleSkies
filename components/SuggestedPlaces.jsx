@@ -2,9 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react'
 import styles from '../styles/suggested.module.css'
 import { FaStar, FaTimes, FaChevronLeft, FaChevronRight, FaMapMarkerAlt, FaClock } from 'react-icons/fa'
 import { getLocationWithFallback } from '@/lib/getLocation'
+import { useRouter } from 'next/router'
 
 /* ─── Place Detail Modal ─────────────────────────────────────────── */
 function PlaceModal({ place, onClose }) {
+  const router = useRouter()
   const [activePhoto, setActivePhoto] = useState(0);
 
   const photos = place.photos ?? [];
@@ -15,6 +17,18 @@ function PlaceModal({ place, onClose }) {
     if (!photo) return 'https://placehold.co/800x500?text=No+Image';
     return `https://places.googleapis.com/v1/${photo.name}/media?maxWidthPx=${size}&key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}`;
   };
+
+  const handleDirections = () => {
+    const lat = place.location?.latitude
+    const lng = place.location?.longitude
+    const label = place.displayName?.text ?? ''
+    onClose()
+    if (lat && lng) {
+      router.push(`/map?lat=${lat}&lng=${lng}&label=${encodeURIComponent(label)}`)
+    } else {
+      router.push(`/map?label=${encodeURIComponent(label)}`)
+    }
+  }
 
   const prev = useCallback(() =>
     setActivePhoto(i => (i - 1 + totalPhotos) % totalPhotos), [totalPhotos]);
@@ -124,6 +138,11 @@ function PlaceModal({ place, onClose }) {
             </div>
           )}
 
+          {/* Directions button */}
+          <button className="modal-directions-btn" onClick={handleDirections}>
+            <FaMapMarkerAlt /> Get Directions
+          </button>
+
           {/* Reviews */}
           {reviews.length > 0 && (
             <div>
@@ -164,6 +183,7 @@ function PlaceModal({ place, onClose }) {
 
 /* ─── Main Component ─────────────────────────────────────────────── */
 export default function SuggestedPlaces({ places = [] }) {
+  const router = useRouter()
   const [loading, setLoading] = useState(true);
   const [placesData, setPlacesData] = useState([]);
   const [error, setError] = useState(null);
@@ -203,6 +223,19 @@ export default function SuggestedPlaces({ places = [] }) {
     const photoName = photos[0].name;
     return `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=400&key=${process.env.NEXT_PUBLIC_GOOGLE_PLACES_API_KEY}`;
   };
+
+  const handleDirections = (e, place) => {
+    e.stopPropagation() // prevent opening the modal
+    const lat = place.location?.latitude
+    const lng = place.location?.longitude
+    const label = place.displayName?.text ?? ''
+
+    if (lat && lng) {
+      router.push(`/map?lat=${lat}&lng=${lng}&label=${encodeURIComponent(label)}`)
+    } else {
+      router.push(`/map?label=${encodeURIComponent(label)}`)
+    }
+  }
 
   useEffect(() => {
     searchNearbyPlaces();
@@ -263,8 +296,17 @@ export default function SuggestedPlaces({ places = [] }) {
                 <div className={styles.info}>
                   <h4 className={styles.title}>{place.displayName?.text}</h4>
                   <p className={styles.description}>{place.formattedAddress}</p>
-                  <div className={styles.rating}>
-                    <FaStar className={styles.star} /> {place.rating ?? 'N/A'} ({place.userRatingCount ?? 0})
+                  <div className={styles.cardBottom}>
+                    <div className={styles.rating}>
+                      <FaStar className={styles.star} /> {place.rating ?? 'N/A'} ({place.userRatingCount ?? 0})
+                    </div>
+                    <button
+                      className={styles.directionsBtn}
+                      onClick={(e) => handleDirections(e, place)}
+                      title="Get directions"
+                    >
+                      <FaMapMarkerAlt /> Directions
+                    </button>
                   </div>
                 </div>
               </div>

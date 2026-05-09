@@ -124,6 +124,7 @@ const MyEvents = () => {
   // --- HELPERS ---
   const getTimePart = (dt) => dt && dt.includes('T') ? dt.split('T')[1].substring(0, 5) : '12:00';
   const getDatePart = (dt) => dt && dt.includes('T') ? dt.split('T')[0] : new Date().toISOString().split('T')[0];
+  const [viewMode, setViewMode] = useState('grid') // 'grid' | 'list'
 
   // Helper to display 24h string (14:30) as 12h string (2:30 PM)
   const formatDisplayTime = (time24) => {
@@ -1252,6 +1253,30 @@ const MyEvents = () => {
             >
               <span style={{ fontSize: '14px' }}>{isAiLoading ? '⏳' : '✨'}</span> {isAiLoading ? 'Analyzing...' : 'AI Suggest'}
             </button>
+
+            {/* View toggle */}
+            <div className={styles.viewToggle}>
+              <button
+                className={`${styles.viewToggleBtn} ${viewMode === 'grid' ? styles.viewToggleActive : ''}`}
+                onClick={() => setViewMode('grid')}
+                title="Grid view"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+                </svg>
+              </button>
+              <button
+                className={`${styles.viewToggleBtn} ${viewMode === 'list' ? styles.viewToggleActive : ''}`}
+                onClick={() => setViewMode('list')}
+                title="List view"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="3" y="4" width="18" height="3" rx="1"/><rect x="3" y="10.5" width="18" height="3" rx="1"/>
+                  <rect x="3" y="17" width="18" height="3" rx="1"/>
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -1303,59 +1328,114 @@ const MyEvents = () => {
               <div className="loading-spinner"></div>
             </div>
           ) : (
-            <section className={styles.eventList}>
-          {filteredEvents.length === 0 ? (
-            <div className={styles.emptyState}>
-              {statusFilter === 'Done' ? 'No completed events yet.' : statusFilter === 'Upcoming' ? 'No upcoming events. Click "Add" to create one!' : 'No events found. Click "Add" to create one!'}
-            </div>
-          ) : (
-            filteredEvents.map(event => {
-              const status = getEventStatus(event);
-              return (
-                <div key={event.id} className={styles.eventCard} style={{
-                  position: 'relative',
-                  backgroundImage: `url(${event.image_link})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                }} 
-                onClick={() => handleOpenItinerary(event)}>
-                  <span>
-                    <div className={styles.titleContainer}>
-                      <p>{event.title}</p>
-                    </div>
-                  </span>
-
-                  {/* Status Badge */}
-                  <span
-                    className={styles.cardStatusBadge}
-                    style={{
-                      background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
-                      color: status === 'done' ? '#15A862' : '#4396D1',
-                      border: '0.5px solid black'
-                    }}
-                  >
-                    {status === 'done' ? 'Done' : 'Upcoming'}
-                  </span>
-
-                  {/* Conditionally Render Edit/Delete Actions */}
-                  {isEditListMode && (
-                    <div className={styles.cardActions}>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEditForm(event)
-                      }} className={styles.iconBtnEdit}>✎</button>
-                      <button onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteEvent(event.id)
-                      }} className={styles.iconBtnDelete}>🗑</button>
-                    </div>
-                  )}
+            <section className={viewMode === 'grid' ? styles.eventList : styles.eventListView}>
+              {filteredEvents.length === 0 ? (
+                <div className={styles.emptyState}>
+                  {statusFilter === 'Done' ? 'No completed events yet.' : statusFilter === 'Upcoming' ? 'No upcoming events. Click "Add" to create one!' : 'No events found. Click "Add" to create one!'}
                 </div>
-              );
-            })
-          )}
-        </section>
+              ) : viewMode === 'grid' ? (
+                // ── GRID VIEW (existing) ──────────────────────────────────────────────
+                filteredEvents.map(event => {
+                  const status = getEventStatus(event)
+                  return (
+                    <div key={event.id} className={styles.eventCard} style={{
+                      position: 'relative',
+                      backgroundImage: `url(${event.image_link})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat',
+                    }}
+                    onClick={() => handleOpenItinerary(event)}>
+                      <span>
+                        <div className={styles.titleContainer}>
+                          <p>{event.title}</p>
+                        </div>
+                      </span>
+                      <span
+                        className={styles.cardStatusBadge}
+                        style={{
+                          background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
+                          color: status === 'done' ? '#15A862' : '#4396D1',
+                          border: '0.5px solid black'
+                        }}
+                      >
+                        {status === 'done' ? 'Done' : 'Upcoming'}
+                      </span>
+                      {isEditListMode && (
+                        <div className={styles.cardActions}>
+                          <button onClick={(e) => { e.stopPropagation(); handleOpenEditForm(event) }} className={styles.iconBtnEdit}>✎</button>
+                          <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id) }} className={styles.iconBtnDelete}>🗑</button>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })
+              ) : (
+                // ── LIST VIEW ─────────────────────────────────────────────────────────
+                filteredEvents.map(event => {
+                  const status = getEventStatus(event)
+                  const range = event.start_datetime ? formatDateRange(event.start_datetime, event.end_datetime) : null
+                  return (
+                    <div
+                      key={event.id}
+                      className={styles.eventListItem}
+                      onClick={() => handleOpenItinerary(event)}
+                    >
+                      {/* Thumbnail */}
+                      <div className={styles.listThumb}>
+                        {event.image_link
+                          ? <img src={event.image_link} alt={event.title} />
+                          : <div className={styles.listThumbPlaceholder}>{event.category[0]}</div>
+                        }
+                      </div>
+
+                      {/* Main info */}
+                      <div className={styles.listInfo}>
+                        <div className={styles.listTitle}>{event.title}</div>
+                        <div className={styles.listMeta}>
+                          {event.venue && <span>🏛️ {event.venue}</span>}
+                          <span>📍 {event.location}</span>
+                          {range && (
+                            <span>📅 {range.dateStr} · {range.startTime}{range.endTime ? ` – ${range.endTime}` : ''}</span>
+                          )}
+                        </div>
+                        <div className={styles.listTags}>
+                          <span
+                            className={styles.listCategoryTag}
+                            style={{ background: event.typeColor + '22', color: event.typeColor, border: `1px solid ${event.typeColor}44` }}
+                          >
+                            {event.category}
+                          </span>
+                          {event.price && <span className={styles.listPriceTag}>💰 {event.price}</span>}
+                        </div>
+                      </div>
+
+                      {/* Status + actions */}
+                      <div className={styles.listRight}>
+                        <span
+                          className={styles.cardStatusBadge}
+                          style={{
+                            background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
+                            color: status === 'done' ? '#15A862' : '#4396D1',
+                            border: '0.5px solid black',
+                            position: 'static',
+                            marginBottom: isEditListMode ? '8px' : '0'
+                          }}
+                        >
+                          {status === 'done' ? 'Done' : 'Upcoming'}
+                        </span>
+                        {isEditListMode && (
+                          <div className={styles.listActions}>
+                            <button onClick={(e) => { e.stopPropagation(); handleOpenEditForm(event) }} className={styles.iconBtnEdit}>✎</button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(event.id) }} className={styles.iconBtnDelete}>🗑</button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+            </section>
           )
         }
       </main>

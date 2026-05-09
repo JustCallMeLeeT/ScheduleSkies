@@ -118,10 +118,10 @@
   background: white;
   border: 1px solid #76b5d9;
   color: #333;
-  padding: 8px 20px;
+  padding: 8px 10px;
   border-radius: 20px;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -595,6 +595,164 @@
 
 .calEventPill:hover {
   filter: brightness(1.1);
+}
+
+.viewToggle {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  overflow: hidden;
+  flex-shrink: 0;
+  padding: 0 5px;
+}
+
+.viewToggleBtn {
+  background: none;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+  border-radius: 20px;
+}
+
+.viewToggleBtn:hover {
+  color: rgba(0, 0, 0, 0.8);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.viewToggleActive {
+  background: rgba(118, 181, 217, 0.2) !important;
+  color: #76b5d9 !important;
+}
+
+.eventListView {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eventListItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  position: relative;
+}
+
+.eventListItem:hover {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(118, 181, 217, 0.3);
+  transform: translateX(2px);
+}
+
+.listThumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.listThumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.listThumbPlaceholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  text-transform: uppercase;
+}
+
+.listInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.listTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #000;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.listMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.listMeta span {
+  font-size: 11.5px;
+  color: #000;
+  white-space: normal; 
+  overflow: visible; 
+  text-overflow: unset;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.listTags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.listCategoryTag {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  letter-spacing: 0.04em;
+}
+
+.listPriceTag {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.45);
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.listRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.listActions {
+  display: flex;
+  gap: 6px;
 }
 
 .formModal {
@@ -1800,4 +1958,215 @@
 [data-theme='dark'] .pill,
 [data-theme='dark'] .details p {
   color: #a0aec0;
+}
+
+[data-theme="dark"] .eventListItem {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .eventListItem:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(118, 181, 217, 0.35);
+}
+
+[data-theme="dark"] .listTitle {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .listMeta span {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+[data-theme="dark"] .listThumbPlaceholder {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.25);
+}
+
+[data-theme="dark"] .listPriceTag {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.4);
+}
+
+[data-theme="dark"] .viewToggle {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .viewToggleBtn {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+[data-theme="dark"] .viewToggleBtn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.75);
+}
+
+[data-theme="dark"] .viewToggleActive {
+  background: rgba(118, 181, 217, 0.18) !important;
+  color: #76b5d9 !important;
+}
+
+@media (max-width: 768px) {
+
+  .actionGroup {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .actionBtn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .viewToggle {
+    margin-left: auto;
+  }
+
+  .viewToggleBtn {
+    padding: 6px 8px;
+  }
+
+  .eventList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .eventCard {
+    height: 160px;
+  }
+
+  .eventListView {
+    gap: 6px;
+  }
+
+  .eventListItem {
+    padding: 10px 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .eventListItem:hover {
+    transform: none; /* disable slide on touch */
+  }
+
+  .listThumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+  }
+
+  .listThumbPlaceholder {
+    font-size: 18px;
+  }
+
+  .listTitle {
+    font-size: 13px;
+  }
+
+  .listMeta span {
+    font-size: 11px;
+  }
+
+  /* Hide address on very small screens, keep venue + date */
+  .listMeta span:nth-child(2) {
+    display: none;
+  }
+
+  .listTags {
+    gap: 4px;
+    margin-top: 1px;
+  }
+
+  .listCategoryTag,
+  .listPriceTag {
+    font-size: 9px;
+    padding: 1px 6px;
+  }
+
+  .listRight {
+    gap: 4px;
+  }
+
+  .cardStatusBadge {
+    font-size: 10px;
+    padding: 2px 7px;
+  }
+
+  .listActions {
+    gap: 4px;
+  }
+
+  .statusFilterBar {
+    gap: 6px;
+  }
+
+  .statusBtn {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .filterBar {
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .filterDropdownMobile {
+    width: 100%;
+  }
+
+  .mobileSelect {
+    width: 100%;
+  }
+
+}
+
+@media (max-width: 480px) {
+
+  /* Single column grid on tiny screens */
+  .eventList {
+    grid-template-columns: 1fr;
+  }
+
+  .eventCard {
+    height: 180px;
+  }
+
+  /* Collapse action buttons to icons only */
+  .actionBtn span + * {
+    display: none; /* hide label text, keep icon */
+  }
+
+  .actionBtn {
+    padding: 7px 10px;
+    min-width: 34px;
+    justify-content: center;
+  }
+
+  /* Tighter list item */
+  .eventListItem {
+    padding: 9px 10px;
+    gap: 8px;
+  }
+
+  .listThumb {
+    width: 44px;
+    height: 44px;
+  }
+
+  .listTitle {
+    font-size: 12.5px;
+  }
+
+  /* Hide price tag on tiny screens */
+  .listPriceTag {
+    display: none;
+  }
+
+  /* Stack right column */
+  .listRight {
+    align-items: flex-end;
+  }
 }
