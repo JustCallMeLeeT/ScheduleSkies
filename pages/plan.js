@@ -47,18 +47,66 @@ const MyEvents = () => {
     };
   };
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (currentUserId = userId) => {
+    if (!currentUserId) return;
     setLoading(true);
-    const { data, error } = await supabase.from('events').select('*').order('date', { ascending: true });
-    if (data && !error) {
-      setEventData(data.map(generateDynamicProps));
+
+    const { data: ownedEvents, error: ownedError } = await supabase
+      .from('events')
+      .select('*')
+      .eq('user_id', currentUserId);
+
+    if (ownedError) {
+      console.error('Failed to fetch owned events:', ownedError);
       setLoading(false);
+      return;
     }
+
+    // Pull events shared to this account (when collaborator is logged in).
+    const { data: collabRows, error: collabError } = await supabase
+      .from('share_collaborators')
+      .select('event_shares!inner(event_id)')
+      .eq('user_id', currentUserId);
+
+    if (collabError) {
+      console.error('Failed to fetch shared events:', collabError);
+    }
+
+    const sharedEventIds = Array.from(new Set(
+      (collabRows || [])
+        .map(row => Array.isArray(row?.event_shares) ? row.event_shares[0]?.event_id : row?.event_shares?.event_id)
+        .filter(Boolean)
+    ));
+
+    let sharedEvents = [];
+    if (sharedEventIds.length > 0) {
+      const { data: sharedData, error: sharedError } = await supabase
+        .from('events')
+        .select('*')
+        .in('id', sharedEventIds);
+
+      if (sharedError) {
+        console.error('Failed to load shared event rows:', sharedError);
+      } else {
+        sharedEvents = sharedData || [];
+      }
+    }
+
+    const mergedById = new Map();
+    [...(ownedEvents || []), ...sharedEvents].forEach(ev => mergedById.set(ev.id, ev));
+    const merged = Array.from(mergedById.values()).sort((a, b) => {
+      const aDate = a?.date || a?.start_datetime || '';
+      const bDate = b?.date || b?.start_datetime || '';
+      return aDate.localeCompare(bDate);
+    });
+
+    setEventData(merged.map(generateDynamicProps));
+    setLoading(false);
   };
 
   // --- 2. UI & LOCATION STATE ---
   const [activeFilter, setActiveFilter] = useState('All Events');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('Upcoming');
   const [searchQuery, setSearchQuery] = useState('');
   const [userLocation, setUserLocation] = useState('Locating...');
   const [currentDate, setCurrentDate] = useState('');
@@ -197,7 +245,7 @@ const MyEvents = () => {
         router.push('/');
       } else {
         setUserId(session.user.id);
-        fetchEvents();
+        fetchEvents(session.user.id);
       }
     };
     checkUser();
