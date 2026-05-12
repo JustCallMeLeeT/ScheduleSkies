@@ -92,8 +92,12 @@ const MyEvents = () => {
       }
     }
 
+    // Tag events with isShared property
+    const taggedOwnedEvents = (ownedEvents || []).map(ev => ({ ...ev, isShared: false }));
+    const taggedSharedEvents = (sharedEvents || []).map(ev => ({ ...ev, isShared: true }));
+
     const mergedById = new Map();
-    [...(ownedEvents || []), ...sharedEvents].forEach(ev => mergedById.set(ev.id, ev));
+    [...taggedOwnedEvents, ...taggedSharedEvents].forEach(ev => mergedById.set(ev.id, ev));
     const merged = Array.from(mergedById.values()).sort((a, b) => {
       const aDate = a?.date || a?.start_datetime || '';
       const bDate = b?.date || b?.start_datetime || '';
@@ -660,7 +664,10 @@ const MyEvents = () => {
     } catch (e) {
       console.error(e);
     }
-    const params = new URLSearchParams({ pick: '1', from: 'activity', returnTo: '/plan' });
+    // Determine if this event is shared and set appropriate context
+    const isShared = selectedEventForItinerary.isShared === true;
+    const contextType = isShared ? 'shared-activity' : 'activity';
+    const params = new URLSearchParams({ pick: '1', from: contextType, returnTo: '/plan' });
     if (activityForm.latitude != null && activityForm.longitude != null) {
       params.set('lat', String(activityForm.latitude));
       params.set('lng', String(activityForm.longitude));
@@ -1425,16 +1432,32 @@ const MyEvents = () => {
                           <p>{event.title}</p>
                         </div>
                       </span>
-                      <span
-                        className={styles.cardStatusBadge}
-                        style={{
-                          background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
-                          color: status === 'done' ? '#15A862' : '#4396D1',
-                          border: '0.5px solid black'
-                        }}
-                      >
-                        {status === 'done' ? 'Done' : 'Upcoming'}
-                      </span>
+                      <div style={{ display: 'flex', gap: '6px', position: 'absolute', bottom: '12px', left: '12px', right: '12px', justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+                        {event.isShared && (
+                          <span style={{
+                            background: 'rgba(100, 116, 139, 0.95)',
+                            color: '#fff',
+                            padding: '4px 10px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            border: '0.5px solid rgba(255, 255, 255, 0.3)',
+                            backdropFilter: 'blur(8px)',
+                          }}>
+                            🔗 Shared
+                          </span>
+                        )}
+                        <span
+                          className={styles.cardStatusBadge}
+                          style={{
+                            background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
+                            color: status === 'done' ? '#15A862' : '#4396D1',
+                            border: '0.5px solid black'
+                          }}
+                        >
+                          {status === 'done' ? 'Done' : 'Upcoming'}
+                        </span>
+                      </div>
                       {isEditListMode && (
                         <div className={styles.cardActions}>
                           <button onClick={(e) => { e.stopPropagation(); handleOpenEditForm(event) }} className={styles.iconBtnEdit}>✎</button>
@@ -1486,18 +1509,33 @@ const MyEvents = () => {
 
                       {/* Status + actions */}
                       <div className={styles.listRight}>
-                        <span
-                          className={styles.cardStatusBadge}
-                          style={{
-                            background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
-                            color: status === 'done' ? '#15A862' : '#4396D1',
-                            border: '0.5px solid black',
-                            position: 'static',
-                            marginBottom: isEditListMode ? '8px' : '0'
-                          }}
-                        >
-                          {status === 'done' ? 'Done' : 'Upcoming'}
-                        </span>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end', marginBottom: isEditListMode ? '8px' : '0' }}>
+                          {event.isShared && (
+                            <span style={{
+                              background: 'rgba(100, 116, 139, 0.95)',
+                              color: '#fff',
+                              padding: '4px 10px',
+                              borderRadius: '12px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              border: '0.5px solid rgba(255, 255, 255, 0.3)',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              🔗 Shared
+                            </span>
+                          )}
+                          <span
+                            className={styles.cardStatusBadge}
+                            style={{
+                              background: status === 'done' ? '#D1F2E0' : '#D5EAF9',
+                              color: status === 'done' ? '#15A862' : '#4396D1',
+                              border: '0.5px solid black',
+                              position: 'static',
+                            }}
+                          >
+                            {status === 'done' ? 'Done' : 'Upcoming'}
+                          </span>
+                        </div>
                         {isEditListMode && (
                           <div className={styles.listActions}>
                             <button onClick={(e) => { e.stopPropagation(); handleOpenEditForm(event) }} className={styles.iconBtnEdit}>✎</button>

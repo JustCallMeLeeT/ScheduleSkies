@@ -578,6 +578,10 @@ const MapScreen = ({
   const [waypointsList, setWaypointsList] = useState([]);
   const [currentWaypointIndex, setCurrentWaypointIndex] = useState(0);
 
+  // Mobile bottom sheet and desktop collapsible states
+  const [placePanelCollapsed, setPlacePanelCollapsed] = useState(false);
+  const [showPlacesBottomSheet, setShowPlacesBottomSheet] = useState(false);
+
   const lastFetchedLocationRef = useRef(null);
 
   useEffect(() => {
@@ -641,8 +645,9 @@ const MapScreen = ({
   const confirmPick = () => {
     if (!pickedPoint) return;
     try {
+      const storageKey = `scheduleSkies_mapPick_${pickContext}`;
       sessionStorage.setItem(
-        'scheduleSkies_mapPick',
+        storageKey,
         JSON.stringify({
           context: pickContext,
           lat: pickedPoint.lat,
@@ -942,9 +947,9 @@ const MapScreen = ({
       {flyTo && <FlyTo coords={flyTo} />}
       {pickMode && <MapPickClickHandler enabled={pickMode} onLatLngClick={handlePickMapClick} />}
       {!pickMode && (
-        <MapClickHandler 
-          mode={mapClickMode} 
-          onSetOrigin={handleMapSetOrigin} 
+        <MapClickHandler
+          mode={mapClickMode}
+          onSetOrigin={handleMapSetOrigin}
           onSetDestination={handleMapSetDestination}
           isLocked={!pickMode && origin !== null && destination !== null}
         />
@@ -1059,38 +1064,84 @@ const MapScreen = ({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', padding: '12px', pointerEvents: 'auto', marginTop: '20px' }}>
+        <div style={{ display: 'flex', gap: '12px', padding: '12px', pointerEvents: 'auto', marginTop: '20px', alignItems: 'flex-start', position: 'relative' }}>
+          {/* Desktop Collapsible Sidebar */}
           {!pickMode && nearbyPlaces.length > 0 && (
-            <div style={{ width: '280px', backgroundColor: '#f8f9fa', padding: '12px', display: 'flex', flexDirection: 'column', overflowY: 'auto', gap: '10px', flexShrink: 0, borderRadius: '16px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', pointerEvents: 'auto', maxHeight: 'calc(100vh - 100px)' }}>
-              <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#1A365D', margin: '0 0 2px', textAlign: 'center' }}>Suggested Places</h3>
-              <p style={{ fontSize: '10px', color: '#2C5282', textAlign: 'center', margin: '0 0 4px', opacity: 0.8 }}>{getFilteredPlaces().length} places found</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {getFilteredPlaces().map((place, i) => (
-                  <div key={i} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}>
-                    <div style={{ height: '70px', background: `linear-gradient(135deg, ${getPlaceColor(place.type)}80, ${getPlaceColor(place.type)})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{getPlaceIconForCard(place.type)}</div>
-                    <div style={{ padding: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
-                        <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#1A365D', margin: 0, flex: 1 }}>{place.name}</h4>
-                        {place.rating && <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#FFD70020', padding: '1px 4px', borderRadius: '12px' }}><span style={{ color: '#FFB800', fontSize: '9px' }}>⭐</span><span style={{ fontSize: '10px', fontWeight: '600' }}>{place.rating}</span></div>}
-                      </div>
-                      {place.address && <p style={{ fontSize: '9px', color: '#5a6b7c', margin: '0 0 4px', lineHeight: 1.2 }}>{place.address.length > 50 ? place.address.substring(0, 50) + '…' : place.address}</p>}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <span style={{ fontSize: '9px', background: '#EDF2F7', padding: '2px 6px', borderRadius: '12px', color: '#2C5282', fontWeight: '500' }}>{place.type}</span>
-                          <span style={{ fontSize: '9px', color: '#4A5568' }}>📍 {place.distance}m</span>
+            <div style={{
+              width: placePanelCollapsed ? '60px' : '280px',
+              backgroundColor: '#f8f9fa',
+              padding: placePanelCollapsed ? '12px 6px' : '12px',
+              display: 'flex',
+              flexDirection: 'column',
+              overflowY: 'auto',
+              gap: '10px',
+              flexShrink: 0,
+              borderRadius: '16px',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+              pointerEvents: 'auto',
+              maxHeight: 'calc(100vh - 100px)',
+              transition: 'width 0.3s ease, padding 0.3s ease',
+              position: 'relative',
+            }}>
+              <button
+                onClick={() => setPlacePanelCollapsed(!placePanelCollapsed)}
+                style={{
+                  position: 'absolute',
+                  top: '8px',
+                  right: placePanelCollapsed ? '-12px' : '8px',
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  border: 'none',
+                  background: '#2C5282',
+                  color: 'white',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  zIndex: 10,
+                  transition: 'right 0.3s ease',
+                }}
+                title={placePanelCollapsed ? 'Expand' : 'Collapse'}
+              >
+                {placePanelCollapsed ? '→' : '←'}
+              </button>
+
+              {!placePanelCollapsed && (
+                <>
+                  <h3 style={{ fontSize: '13px', fontWeight: '800', color: '#1A365D', margin: '0 0 2px', textAlign: 'center' }}>Suggested Places</h3>
+                  <p style={{ fontSize: '10px', color: '#2C5282', textAlign: 'center', margin: '0 0 4px', opacity: 0.8 }}>{getFilteredPlaces().length} places found</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {getFilteredPlaces().map((place, i) => (
+                      <div key={i} style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', transition: 'transform 0.2s, box-shadow 0.2s', cursor: 'pointer' }}>
+                        <div style={{ height: '70px', background: `linear-gradient(135deg, ${getPlaceColor(place.type)}80, ${getPlaceColor(place.type)})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>{getPlaceIconForCard(place.type)}</div>
+                        <div style={{ padding: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                            <h4 style={{ fontSize: '12px', fontWeight: '700', color: '#1A365D', margin: 0, flex: 1 }}>{place.name}</h4>
+                            {place.rating && <div style={{ display: 'flex', alignItems: 'center', gap: '2px', background: '#FFD70020', padding: '1px 4px', borderRadius: '12px' }}><span style={{ color: '#FFB800', fontSize: '9px' }}>⭐</span><span style={{ fontSize: '10px', fontWeight: '600' }}>{place.rating}</span></div>}
+                          </div>
+                          {place.address && <p style={{ fontSize: '9px', color: '#5a6b7c', margin: '0 0 4px', lineHeight: 1.2 }}>{place.address.length > 50 ? place.address.substring(0, 50) + '…' : place.address}</p>}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontSize: '9px', background: '#EDF2F7', padding: '2px 6px', borderRadius: '12px', color: '#2C5282', fontWeight: '500' }}>{place.type}</span>
+                              <span style={{ fontSize: '9px', color: '#4A5568' }}>📍 {place.distance}m</span>
+                            </div>
+                          </div>
+                          <button onClick={() => handleRerouteToPlace(place)} style={{ width: '100%', padding: '5px 8px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '10px', fontWeight: '600', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#F57C00'} onMouseOut={e => e.currentTarget.style.background = '#FF9800'}>Reroute Here</button>
                         </div>
                       </div>
-                      <button onClick={() => handleRerouteToPlace(place)} style={{ width: '100%', padding: '5px 8px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '10px', fontWeight: '600', transition: 'background 0.2s' }} onMouseOver={e => e.currentTarget.style.background = '#F57C00'} onMouseOut={e => e.currentTarget.style.background = '#FF9800'}>Reroute Here</button>
-                    </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              {isRerouted && reroutedPlace && (
-                <div style={{ marginTop: '8px', padding: '8px', background: '#FFF3E0', borderRadius: '10px', border: '1px solid #FF9800' }}>
-                  <div style={{ fontSize: '10px', fontWeight: '700', color: '#E65100', marginBottom: '4px' }}>Currently Rerouted</div>
-                  <div style={{ fontSize: '10px', color: '#BF360C', marginBottom: '4px' }}>To: <strong>{reroutedPlace.name}</strong></div>
-                  <button onClick={undoReroute} style={{ padding: '4px 8px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: '600', width: '100%' }}>Undo</button>
-                </div>
+                  {isRerouted && reroutedPlace && (
+                    <div style={{ marginTop: '8px', padding: '8px', background: '#FFF3E0', borderRadius: '10px', border: '1px solid #FF9800' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: '#E65100', marginBottom: '4px' }}>Currently Rerouted</div>
+                      <div style={{ fontSize: '10px', color: '#BF360C', marginBottom: '4px' }}>To: <strong>{reroutedPlace.name}</strong></div>
+                      <button onClick={undoReroute} style={{ padding: '4px 8px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: '600', width: '100%' }}>Undo</button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -1226,32 +1277,164 @@ const MapScreen = ({
           )}
 
           {!pickMode && nearbyPlaces.length > 0 && showPlacesPanel && (
-            <div style={{ position: 'absolute', bottom: '170px', left: '10px', right: '10px', zIndex: 1002, pointerEvents: 'auto', background: 'white', borderRadius: '16px', padding: '10px', boxShadow: '0 4px 12px rgba(0,0,0,0.13)', maxHeight: '40%', overflowY: 'auto' }}>
-              <div style={{ marginBottom: '6px' }}><div style={{ fontSize: '11px', fontWeight: '800', color: '#1A365D' }}>📍 Suggested Places ({getFilteredPlaces().length})</div></div>
-              <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                {placeFilterOptions.slice(0, 4).map(option => (
-                  <button key={option.key} onClick={() => setPlaceTypeFilter(option.key)} style={{ padding: '2px 6px', borderRadius: '12px', border: 'none', background: placeTypeFilter === option.key ? '#2C5282' : '#EDF2F7', color: placeTypeFilter === option.key ? 'white' : '#333', cursor: 'pointer', fontSize: '9px' }}>{option.icon} {option.label}</button>
-                ))}
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {getFilteredPlaces().slice(0, 4).map((place, i) => (
-                  <div key={i} style={{ background: '#f5f5f5', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                    <div style={{ padding: '8px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '16px' }}>{getPlaceIconForCard(place.type)}</span><span style={{ fontSize: '11px', fontWeight: '700', color: '#1A365D' }}>{place.name}</span></div>
-                        {place.rating && <div style={{ display: 'flex', alignItems: 'center', gap: '2px' }}><span style={{ fontSize: '9px', color: '#FFB800' }}>⭐</span><span style={{ fontSize: '9px', fontWeight: '600' }}>{place.rating}</span></div>}
+            <>
+              {/* Mobile Bottom Sheet Overlay */}
+              <div
+                onClick={() => setShowPlacesPanel(false)}
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  zIndex: 1001,
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  pointerEvents: 'auto',
+                }}
+              />
+              {/* Mobile Bottom Sheet */}
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  zIndex: 1002,
+                  pointerEvents: 'auto',
+                  background: 'white',
+                  borderTopLeftRadius: '20px',
+                  borderTopRightRadius: '20px',
+                  boxShadow: '0 -4px 16px rgba(0,0,0,0.15)',
+                  maxHeight: '70vh',
+                  overflowY: 'auto',
+                }}
+              >
+                {/* Drag Handle */}
+                <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '8px', marginBottom: '8px' }}>
+                  <div style={{ width: '40px', height: '4px', background: '#CBD5E0', borderRadius: '2px' }} />
+                </div>
+
+                {/* Header */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px 10px', borderBottom: '1px solid #EDF2F7' }}>
+                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#1A365D' }}>📍 Suggested Places</div>
+                  <button
+                    onClick={() => setShowPlacesPanel(false)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '18px',
+                      cursor: 'pointer',
+                      color: '#666',
+                      padding: '4px 8px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Filter Options */}
+                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', padding: '8px 12px', borderBottom: '1px solid #EDF2F7' }}>
+                  {placeFilterOptions.map(option => (
+                    <button
+                      key={option.key}
+                      onClick={() => setPlaceTypeFilter(option.key)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: '12px',
+                        border: 'none',
+                        background: placeTypeFilter === option.key ? '#2C5282' : '#EDF2F7',
+                        color: placeTypeFilter === option.key ? 'white' : '#333',
+                        cursor: 'pointer',
+                        fontSize: '10px',
+                        fontWeight: '600',
+                      }}
+                    >
+                      {option.icon} {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Places List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '10px 12px' }}>
+                  {getFilteredPlaces().length === 0 ? (
+                    <div style={{ textAlign: 'center', fontSize: '12px', color: '#666', padding: '20px' }}>
+                      No places found for this filter
+                    </div>
+                  ) : (
+                    getFilteredPlaces().map((place, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          background: '#f8f9fa',
+                          borderRadius: '12px',
+                          overflow: 'hidden',
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                        }}
+                      >
+                        <div style={{ height: '50px', background: `linear-gradient(135deg, ${getPlaceColor(place.type)}80, ${getPlaceColor(place.type)})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                          {getPlaceIconForCard(place.type)}
+                        </div>
+                        <div style={{ padding: '8px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
+                            <h4 style={{ fontSize: '11px', fontWeight: '700', color: '#1A365D', margin: 0, flex: 1 }}>{place.name}</h4>
+                            {place.rating && <div style={{ fontSize: '9px', fontWeight: '600', color: '#FFB800' }}>⭐ {place.rating}</div>}
+                          </div>
+                          {place.address && <p style={{ fontSize: '8px', color: '#5a6b7c', margin: '0 0 4px', lineHeight: 1.2 }}>{place.address.length > 60 ? place.address.substring(0, 60) + '…' : place.address}</p>}
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span style={{ fontSize: '8px', background: '#EDF2F7', padding: '1px 4px', borderRadius: '10px', color: '#2C5282', fontWeight: '500' }}>{place.type}</span>
+                              <span style={{ fontSize: '8px', color: '#4A5568' }}>📍 {place.distance}m</span>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleRerouteToPlace(place)}
+                            style={{
+                              width: '100%',
+                              padding: '5px 8px',
+                              background: '#FF9800',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              fontSize: '10px',
+                              fontWeight: '600',
+                            }}
+                          >
+                            Reroute Here
+                          </button>
+                        </div>
                       </div>
-                      {place.address && <p style={{ fontSize: '8px', color: '#5a6b7c', margin: '2px 0 4px', lineHeight: 1.2 }}>{place.address.length > 40 ? place.address.substring(0, 40) + '…' : place.address}</p>}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
-                        <div style={{ display: 'flex', gap: '4px' }}><span style={{ fontSize: '8px', background: '#E2E8F0', padding: '1px 4px', borderRadius: '10px' }}>{place.type}</span><span style={{ fontSize: '8px', color: '#4A5568' }}>{place.distance}m</span></div>
-                        <button onClick={() => handleRerouteToPlace(place)} style={{ padding: '3px 8px', background: '#FF9800', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '9px', fontWeight: '600' }}>Reroute</button>
-                      </div>
+                    ))
+                  )}
+                </div>
+
+                {/* Rerouted Status */}
+                {isRerouted && reroutedPlace && (
+                  <div style={{ padding: '10px 12px', borderTop: '1px solid #EDF2F7' }}>
+                    <div style={{ background: '#FFF3E0', padding: '8px', borderRadius: '10px', border: '1px solid #FF9800' }}>
+                      <div style={{ fontSize: '10px', fontWeight: '700', color: '#E65100', marginBottom: '4px' }}>Currently Rerouted</div>
+                      <div style={{ fontSize: '10px', color: '#BF360C', marginBottom: '4px' }}>To: <strong>{reroutedPlace.name}</strong></div>
+                      <button
+                        onClick={undoReroute}
+                        style={{
+                          width: '100%',
+                          padding: '5px 8px',
+                          background: '#FF9800',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '10px',
+                          fontWeight: '600',
+                        }}
+                      >
+                        Undo Reroute
+                      </button>
                     </div>
                   </div>
-                ))}
-                {getFilteredPlaces().length > 4 && <div style={{ fontSize: '9px', textAlign: 'center', color: '#666', padding: '2px' }}>+{getFilteredPlaces().length - 4} more</div>}
+                )}
               </div>
-            </div>
+            </>
           )}
 
           {!pickMode && waypointsList.length > 0 && showItineraryPanel && (
