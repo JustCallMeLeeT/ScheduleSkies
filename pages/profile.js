@@ -14,6 +14,8 @@ import {
   FaEnvelope,
   FaSync,
 } from 'react-icons/fa';
+import { useState, useEffect, useMemo } from 'react';
+import { FaUserEdit, FaMapMarkerAlt, FaCalendarAlt, FaMoon, FaSun, FaSignOutAlt, FaTrashAlt, FaPlus, FaTimes } from 'react-icons/fa';
 import { supabase } from '../lib/supabaseClient';
 import Sidebar from '../components/Sidebar';
 import profileStyles from '../styles/profile.module.css';
@@ -40,7 +42,8 @@ const ProfilePage = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
-  const [themeMode, setThemeMode] = useState('light');
+  const [themeMode, setThemeMode] = useState(null);
+  const [themeReady, setThemeReady] = useState(false);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -64,16 +67,23 @@ const ProfilePage = () => {
     const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
     if (savedTheme === 'dark' || savedTheme === 'light') {
       setThemeMode(savedTheme);
+    } else {
+      // Fallback to the global theme already applied by _app.js
+      const bodyTheme = document.body.getAttribute('data-theme');
+      setThemeMode(bodyTheme === 'dark' ? 'dark' : 'light');
     }
+    setThemeReady(true);
   }, []);
 
   useEffect(() => {
+    if (!themeReady || !themeMode) return;
     document.body.setAttribute('data-theme', themeMode);
-  }, [themeMode]);
+  }, [themeMode, themeReady]);
 
   useEffect(() => {
+    if (!themeReady || !themeMode) return;
     localStorage.setItem(THEME_STORAGE_KEY, themeMode);
-  }, [themeMode]);
+  }, [themeMode, themeReady]);
 
   const loadProfile = useCallback(async (token, { quiet = false } = {}) => {
     if (!token) return;
@@ -528,7 +538,6 @@ const ProfilePage = () => {
                       </button>
                     </div>
                   </div>
-
                   <div className={profileStyles.card}>
                     <h3>
                       <FaEnvelope /> Password (email link)
@@ -561,6 +570,21 @@ const ProfilePage = () => {
                         <FaTrashAlt /> Delete account
                       </button>
                     </div>
+                  </div>
+                  <div className={profileStyles.actionButtons}>
+                    <button 
+                      className={profileStyles.primaryBtn}
+                      onClick={handleSaveProfile}
+                      disabled={saving}
+                    >
+                      {saving ? 'Saving...' : 'Save Profile'}
+                    </button>
+                    <button
+                      className={profileStyles.logoutBtn}
+                      onClick={handleLogout}
+                    >
+                      <FaSignOutAlt /> Log Out
+                    </button>
                   </div>
                 </div>
               )}

@@ -16,6 +16,9 @@ function eventStatus(ev) {
   if (endDate && endDate < now) return 'done'
   return 'upcoming'
 }
+export default async function handler(req, res) {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.replace(/^Bearer\s+/i, '')?.trim();
 
 function buildEventSummaries(events) {
   const list = events || []
@@ -57,6 +60,18 @@ export default async function handler(req, res) {
   const auth = await requireUserFromRequest(req)
   if (auth.error) {
     return res.status(auth.status).json({ error: auth.error })
+  // Per-request client so PostgREST runs as this user (RLS sees auth.uid()).
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+    {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    }
+  );
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return res.status(401).json({ error: 'Invalid token' });
   }
   const { db, user } = auth
 
@@ -66,6 +81,11 @@ export default async function handler(req, res) {
         db.from('profiles').select('*').eq('id', user.id).maybeSingle(),
         db.from('events').select('*').eq('user_id', user.id).order('date', { ascending: true }),
       ])
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
       if (profileError && profileError.code !== 'PGRST116') {
         throw profileError
@@ -105,6 +125,33 @@ export default async function handler(req, res) {
       }
 
       const { data, error } = await db.from('profiles').upsert(merged, { onConflict: 'id' }).select().single()
+        saved_locations: locations || [],
+        saved_itineraries: itineraries || [],
+        analytics: analytics || {
+          trips_taken: 0,
+          places_visited: 0,
+          most_visited_city: null,
+        },
+        email: user.email,
+      });
+    }
+
+    if (req.method === 'PUT') {
+      const { full_name, email_updates } = req.body;
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert(
+          {
+            id: user.id,
+            full_name,
+            email_updates,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'id' }
+        )
+        .select()
+        .single();
 
       if (error) throw error
 
