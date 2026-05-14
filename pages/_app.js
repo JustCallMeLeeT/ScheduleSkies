@@ -12,6 +12,7 @@ import '../styles/features.css'
 import '../styles/plan.css'
 import '../styles/dashboard.css'
 import '../styles/loading.css';
+import '../styles/places-modal.css'
 
 export default function App({ Component, pageProps }) {
   const router = useRouter()
